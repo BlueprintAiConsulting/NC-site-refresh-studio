@@ -1,13 +1,55 @@
-import { Phone, Mail, MapPin } from "lucide-react";
+import { Phone, Mail, MapPin, Loader2, CheckCircle } from "lucide-react";
 import { useState, FormEvent } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 export function PlanVisit() {
   const [formState, setFormState] = useState({ name: "", email: "", message: "" });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const { toast } = useToast();
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    // Form is a placeholder - in production, connect to a form service
-    alert("Form submission is a placeholder. Please call 717-764-0252 or email newcreation25@comcast.net.");
+    
+    if (!formState.name || !formState.email) {
+      toast({
+        title: "Required fields missing",
+        description: "Please enter your name and email.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke("send-contact-email", {
+        body: {
+          name: formState.name,
+          email: formState.email,
+          message: formState.message,
+        },
+      });
+
+      if (error) throw error;
+
+      setIsSubmitted(true);
+      setFormState({ name: "", email: "", message: "" });
+      toast({
+        title: "Message sent!",
+        description: "Thank you for reaching out. We'll get back to you soon.",
+      });
+    } catch (error: any) {
+      console.error("Error submitting form:", error);
+      toast({
+        title: "Something went wrong",
+        description: "Please try again or contact us directly at 717-764-0252.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -73,45 +115,79 @@ export function PlanVisit() {
 
             <h3 className="font-semibold text-base mb-2">Quick Message</h3>
             <p className="text-xs text-muted-foreground mb-4">
-              This form is a placeholder. For now, call or email us directly.
+              Send us a message and we'll get back to you soon.
             </p>
 
-            <form onSubmit={handleSubmit} className="space-y-3">
-              <div>
-                <label htmlFor="name" className="text-sm font-medium mb-1 block">Name</label>
-                <input
-                  id="name"
-                  type="text"
-                  className="form-input"
-                  placeholder="Your name"
-                  value={formState.name}
-                  onChange={(e) => setFormState({ ...formState, name: e.target.value })}
-                />
+            {isSubmitted ? (
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <CheckCircle className="w-12 h-12 text-primary mb-4" />
+                <h4 className="font-semibold text-lg mb-2">Message Sent!</h4>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Thank you for reaching out. We'll get back to you soon.
+                </p>
+                <button 
+                  onClick={() => setIsSubmitted(false)} 
+                  className="btn-secondary"
+                >
+                  Send Another Message
+                </button>
               </div>
-              <div>
-                <label htmlFor="email" className="text-sm font-medium mb-1 block">Email</label>
-                <input
-                  id="email"
-                  type="email"
-                  className="form-input"
-                  placeholder="you@example.com"
-                  value={formState.email}
-                  onChange={(e) => setFormState({ ...formState, email: e.target.value })}
-                />
-              </div>
-              <div>
-                <label htmlFor="message" className="text-sm font-medium mb-1 block">Question (optional)</label>
-                <textarea
-                  id="message"
-                  className="form-input resize-y"
-                  rows={3}
-                  placeholder="Anything you'd like to ask?"
-                  value={formState.message}
-                  onChange={(e) => setFormState({ ...formState, message: e.target.value })}
-                />
-              </div>
-              <button type="submit" className="btn-primary w-full">Submit</button>
-            </form>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-3">
+                <div>
+                  <label htmlFor="name" className="text-sm font-medium mb-1 block">Name *</label>
+                  <input
+                    id="name"
+                    type="text"
+                    className="form-input"
+                    placeholder="Your name"
+                    value={formState.name}
+                    onChange={(e) => setFormState({ ...formState, name: e.target.value })}
+                    disabled={isSubmitting}
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="email" className="text-sm font-medium mb-1 block">Email *</label>
+                  <input
+                    id="email"
+                    type="email"
+                    className="form-input"
+                    placeholder="you@example.com"
+                    value={formState.email}
+                    onChange={(e) => setFormState({ ...formState, email: e.target.value })}
+                    disabled={isSubmitting}
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="message" className="text-sm font-medium mb-1 block">Question (optional)</label>
+                  <textarea
+                    id="message"
+                    className="form-input resize-y"
+                    rows={3}
+                    placeholder="Anything you'd like to ask?"
+                    value={formState.message}
+                    onChange={(e) => setFormState({ ...formState, message: e.target.value })}
+                    disabled={isSubmitting}
+                  />
+                </div>
+                <button 
+                  type="submit" 
+                  className="btn-primary w-full flex items-center justify-center gap-2"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Sending...
+                    </>
+                  ) : (
+                    "Submit"
+                  )}
+                </button>
+              </form>
+            )}
           </div>
         </div>
       </div>
