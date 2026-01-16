@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
+import { UMCLogo } from "./UMCLogo";
 
 const navLinks = [
   { href: "#plan", label: "Plan a Visit" },
@@ -18,15 +19,10 @@ export function Header() {
         <nav className="flex items-center justify-between h-16" role="navigation" aria-label="Primary">
           {/* Logo */}
           <a href="#top" className="flex items-center gap-3">
-            <div 
-              className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-semibold text-sm"
-              aria-hidden="true"
-            >
-              NC
-            </div>
+            <UMCLogo size={32} />
             <div className="flex flex-col">
               <span className="text-sm font-semibold leading-tight">New Creation</span>
-              <span className="text-xs text-muted-foreground leading-tight">Community Church</span>
+              <span className="text-xs text-muted-foreground leading-tight">United Methodist Church</span>
             </div>
           </a>
 
