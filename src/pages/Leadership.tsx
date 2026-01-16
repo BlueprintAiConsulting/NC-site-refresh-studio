@@ -1,6 +1,8 @@
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Mail, Phone } from "lucide-react";
+import { motion } from "framer-motion";
+import { FadeIn, StaggerContainer, StaggerItem } from "@/components/animations/FadeIn";
 
 interface StaffMember {
   id: string;
@@ -107,61 +109,81 @@ const Leadership = () => {
         {/* Hero section */}
         <section className="py-16 md:py-24 border-b border-border">
           <div className="container max-w-5xl mx-auto px-5">
-            <h1 className="text-4xl md:text-5xl font-semibold mb-6">
+            <motion.h1 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
+              className="text-4xl md:text-5xl font-semibold mb-6"
+            >
               Our Leadership
-            </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl">
+            </motion.h1>
+            <motion.p 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.1, ease: [0.25, 0.1, 0.25, 1] }}
+              className="text-lg text-muted-foreground max-w-2xl"
+            >
               Meet the dedicated team who serve and lead our church community. 
               We're here to walk alongside you in your faith journey.
-            </p>
+            </motion.p>
           </div>
         </section>
 
         {/* Pastors section */}
         <section className="section-church">
           <div className="container max-w-5xl mx-auto px-5">
-            <h2 className="text-2xl md:text-3xl font-semibold mb-8">
-              Pastoral Team
-            </h2>
-            <div className="grid gap-6">
+            <FadeIn>
+              <h2 className="text-2xl md:text-3xl font-semibold mb-8">
+                Pastoral Team
+              </h2>
+            </FadeIn>
+            <StaggerContainer className="grid gap-6">
               {pastors.map((pastor) => (
-                <StaffCard key={pastor.id} member={pastor} />
+                <StaggerItem key={pastor.id}>
+                  <StaffCard member={pastor} />
+                </StaggerItem>
               ))}
-            </div>
+            </StaggerContainer>
           </div>
         </section>
 
         {/* Staff section */}
         <section className="section-church bg-secondary/30">
           <div className="container max-w-5xl mx-auto px-5">
-            <h2 className="text-2xl md:text-3xl font-semibold mb-8">
-              Church Staff
-            </h2>
-            <div className="grid gap-6">
+            <FadeIn>
+              <h2 className="text-2xl md:text-3xl font-semibold mb-8">
+                Church Staff
+              </h2>
+            </FadeIn>
+            <StaggerContainer className="grid gap-6">
               {staff.map((member) => (
-                <StaffCard key={member.id} member={member} />
+                <StaggerItem key={member.id}>
+                  <StaffCard member={member} />
+                </StaggerItem>
               ))}
-            </div>
+            </StaggerContainer>
           </div>
         </section>
 
         {/* Contact CTA */}
         <section className="py-16 border-t border-border">
           <div className="container max-w-5xl mx-auto px-5 text-center">
-            <h2 className="text-2xl font-semibold mb-4">Get in Touch</h2>
-            <p className="text-muted-foreground mb-6 max-w-lg mx-auto">
-              Have questions or want to connect with our team? We'd love to hear from you.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <a href="tel:717-764-0252" className="btn-primary">
-                <Phone className="w-4 h-4" />
-                Call Us
-              </a>
-              <a href="mailto:newcreation25@comcast.net" className="btn-secondary">
-                <Mail className="w-4 h-4" />
-                Email Us
-              </a>
-            </div>
+            <FadeIn>
+              <h2 className="text-2xl font-semibold mb-4">Get in Touch</h2>
+              <p className="text-muted-foreground mb-6 max-w-lg mx-auto">
+                Have questions or want to connect with our team? We'd love to hear from you.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <a href="tel:717-764-0252" className="btn-primary">
+                  <Phone className="w-4 h-4" />
+                  Call Us
+                </a>
+                <a href="mailto:newcreation25@comcast.net" className="btn-secondary">
+                  <Mail className="w-4 h-4" />
+                  Email Us
+                </a>
+              </div>
+            </FadeIn>
           </div>
         </section>
       </main>
