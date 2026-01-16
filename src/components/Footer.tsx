@@ -1,4 +1,5 @@
 import { Youtube, Facebook } from "lucide-react";
+import { UMCLogo } from "./UMCLogo";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
@@ -10,10 +11,11 @@ export function Footer() {
           {/* Brand */}
           <div>
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-semibold text-xs">
-                NC
+              <UMCLogo size={28} />
+              <div className="flex flex-col">
+                <span className="font-semibold leading-tight">New Creation</span>
+                <span className="text-xs text-muted-foreground">United Methodist Church</span>
               </div>
-              <span className="font-semibold">New Creation</span>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
               3005 Emig Mill Road<br />
@@ -74,7 +76,7 @@ export function Footer() {
 
         <div className="pt-8 border-t border-border">
           <p className="text-xs text-muted-foreground">
-            © {currentYear} New Creation Community Church
+            © {currentYear} New Creation United Methodist Church
           </p>
         </div>
       </div>

@@ -6,70 +6,84 @@
 
 @layer base {
   :root {
-    /* Neutral, calm palette - warm off-white background */
-    --background: 45 20% 98%;
-    --foreground: 220 15% 16%;
+    /* UMC-inspired palette - clean white background */
+    --background: 0 0% 99%;
+    --foreground: 0 0% 0%;
 
     --card: 0 0% 100%;
-    --card-foreground: 220 15% 16%;
+    --card-foreground: 0 0% 0%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 15% 16%;
+    --popover-foreground: 0 0% 0%;
 
-    /* Restrained warm accent - muted gold/amber */
-    --primary: 32 40% 38%;
+    /* UMC Red - Primary accent (Hex: #e4002b → HSL: 349 100% 45%) */
+    --umc-red: 349 100% 45%;
+    --primary: 349 100% 45%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 45 15% 95%;
-    --secondary-foreground: 220 15% 16%;
+    /* UMC Burgundy - Secondary red (Hex: #af292e → HSL: 358 62% 42%) */
+    --umc-burgundy: 358 62% 42%;
+    
+    /* UMC Dark Red (Hex: #7a2426 → HSL: 359 54% 31%) */
+    --umc-dark-red: 359 54% 31%;
 
-    --muted: 45 10% 94%;
-    --muted-foreground: 220 10% 46%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 0%;
 
-    --accent: 32 40% 38%;
+    /* UMC Gray (Hex: #575a5d → HSL: 213 3% 35%) */
+    --muted: 0 0% 95%;
+    --muted-foreground: 213 3% 35%;
+
+    --accent: 349 100% 45%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 45 15% 90%;
-    --input: 45 15% 90%;
-    --ring: 32 40% 38%;
+    /* UMC Light Gray (Hex: #b5b7b4 → HSL: 107 2% 71%) */
+    --border: 107 2% 85%;
+    --input: 107 2% 85%;
+    --ring: 349 100% 45%;
 
     --radius: 0.5rem;
 
-    /* Minimal custom tokens */
-    --accent-soft: 32 40% 38% / 0.08;
+    /* UMC accent soft */
+    --accent-soft: 349 100% 45% / 0.08;
   }
 
   .dark {
-    --background: 220 15% 8%;
-    --foreground: 45 15% 96%;
+    --background: 0 0% 8%;
+    --foreground: 0 0% 96%;
 
-    --card: 220 15% 11%;
-    --card-foreground: 45 15% 96%;
+    --card: 0 0% 11%;
+    --card-foreground: 0 0% 96%;
 
-    --popover: 220 15% 11%;
-    --popover-foreground: 45 15% 96%;
+    --popover: 0 0% 11%;
+    --popover-foreground: 0 0% 96%;
 
-    --primary: 32 50% 55%;
-    --primary-foreground: 220 15% 8%;
+    /* UMC Red - slightly adjusted for dark mode */
+    --umc-red: 349 100% 50%;
+    --primary: 349 100% 50%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 15% 14%;
-    --secondary-foreground: 45 15% 96%;
+    --umc-burgundy: 358 62% 48%;
+    --umc-dark-red: 359 54% 38%;
 
-    --muted: 220 15% 14%;
-    --muted-foreground: 45 10% 60%;
+    --secondary: 0 0% 14%;
+    --secondary-foreground: 0 0% 96%;
 
-    --accent: 220 15% 14%;
-    --accent-foreground: 45 15% 96%;
+    --muted: 0 0% 14%;
+    --muted-foreground: 0 0% 60%;
+
+    --accent: 0 0% 14%;
+    --accent-foreground: 0 0% 96%;
 
     --destructive: 0 62% 30%;
-    --destructive-foreground: 45 15% 96%;
+    --destructive-foreground: 0 0% 96%;
 
-    --border: 220 15% 18%;
-    --input: 220 15% 18%;
-    --ring: 32 50% 55%;
+    --border: 0 0% 18%;
+    --input: 0 0% 18%;
+    --ring: 349 100% 50%;
   }
 }
 
