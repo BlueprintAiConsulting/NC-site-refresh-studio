@@ -1,47 +1,40 @@
-import { Car, Music, Users } from "lucide-react";
+import { Clock, Users, Heart } from "lucide-react";
 
-const steps = [
+const expectations = [
   {
-    icon: Car,
-    title: "Arrive",
-    subtitle: "Easy parking on site.",
-    description: "Come through the main entrance. Dress is casual.",
+    icon: Clock,
+    title: "Arrive & Settle In",
+    description: "Easy parking on site. Come through the main entrance — dress is casual, coffee is available.",
   },
   {
-    icon: Music,
-    title: "Worship",
-    subtitle: "Two service styles.",
-    description: "Traditional at 8:00 AM and contemporary at 10:30 AM.",
+    icon: Heart,
+    title: "Worship Together",
+    description: "Traditional service at 8:00 AM features hymns and liturgy. Contemporary at 10:30 AM offers modern worship music.",
   },
   {
     icon: Users,
-    title: "Connect",
-    subtitle: "Groups and support.",
-    description: "Ministries, care groups, and ways to serve the community.",
+    title: "Connect at Your Pace",
+    description: "Sunday School at 9:15 AM for all ages. Stay for fellowship, or slip out quietly — no pressure.",
   },
 ];
 
 export function WhatToExpect() {
   return (
-    <section id="expect" className="section-church bg-card border-t border-border">
-      <div className="container max-w-6xl mx-auto px-5">
-        <h2 className="text-2xl md:text-3xl font-bold mb-3">What to Expect</h2>
-        <p className="text-muted-foreground max-w-2xl mb-8">
-          A welcoming environment, clear next steps, and space to connect with others at your own pace.
+    <section id="expect" className="section-church bg-secondary/50 border-t border-border">
+      <div className="container max-w-5xl mx-auto px-5">
+        <h2 className="text-3xl md:text-4xl font-semibold mb-4">What to Expect</h2>
+        <p className="text-muted-foreground text-lg mb-12 max-w-2xl">
+          Your first visit should feel comfortable, not overwhelming.
         </p>
 
-        <div className="grid md:grid-cols-3 gap-4">
-          {steps.map((step) => (
-            <div key={step.title} className="card-church">
-              <div 
-                className="w-10 h-10 rounded-xl flex items-center justify-center mb-4"
-                style={{ background: 'hsl(var(--accent-soft))' }}
-              >
-                <step.icon className="w-5 h-5 text-primary" />
+        <div className="grid md:grid-cols-3 gap-6">
+          {expectations.map((item) => (
+            <div key={item.title} className="space-y-3">
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <item.icon className="w-5 h-5 text-primary" />
               </div>
-              <h3 className="font-semibold text-base mb-1">{step.title}</h3>
-              <p className="text-xs text-muted-foreground mb-2">{step.subtitle}</p>
-              <p className="text-sm text-muted-foreground">{step.description}</p>
+              <h3 className="font-semibold text-lg">{item.title}</h3>
+              <p className="text-muted-foreground text-sm leading-relaxed">{item.description}</p>
             </div>
           ))}
         </div>

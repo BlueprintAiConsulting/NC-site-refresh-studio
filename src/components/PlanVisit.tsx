@@ -54,88 +54,92 @@ export function PlanVisit() {
 
   return (
     <section id="plan" className="section-church border-t border-border">
-      <div className="container max-w-6xl mx-auto px-5">
-        <h2 className="text-2xl md:text-3xl font-bold mb-3">Plan a Visit</h2>
-        <p className="text-muted-foreground max-w-2xl mb-8">
-          Everything you need for a first visit. Call or email, or keep it simple and just show up.
+      <div className="container max-w-5xl mx-auto px-5">
+        <h2 className="text-3xl md:text-4xl font-semibold mb-4">Plan Your Visit</h2>
+        <p className="text-muted-foreground text-lg mb-12 max-w-2xl">
+          Everything you need for your first Sunday. Call ahead, or just show up.
         </p>
 
-        <div className="grid md:grid-cols-2 gap-4">
-          {/* Location card */}
-          <div className="card-church">
-            <h3 className="font-semibold text-base mb-3 flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-primary" />
-              Location
-            </h3>
-            <p className="text-sm font-medium mb-4">3005 Emig Mill Road, Dover PA 17315</p>
+        <div className="grid lg:grid-cols-2 gap-8">
+          {/* Location & Map */}
+          <div className="space-y-6">
+            <div className="card-church">
+              <h3 className="font-semibold text-lg mb-4">Location</h3>
+              <div className="flex items-start gap-3 mb-6">
+                <MapPin className="w-5 h-5 text-primary mt-0.5 shrink-0" />
+                <div>
+                  <p className="font-medium">3005 Emig Mill Road</p>
+                  <p className="text-muted-foreground">Dover, PA 17315</p>
+                </div>
+              </div>
 
-            <div className="relative h-64 md:h-80 rounded-xl overflow-hidden border border-border bg-muted">
-              <iframe
-                title="Church location map"
-                className="w-full h-full border-0"
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-                src="https://www.google.com/maps?q=3005%20Emig%20Mill%20Road%20Dover%20PA%2017315&output=embed"
-              />
+              <div className="relative h-48 rounded-lg overflow-hidden border border-border bg-muted mb-4">
+                <iframe
+                  title="Church location"
+                  className="w-full h-full border-0"
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  src="https://www.google.com/maps?q=3005%20Emig%20Mill%20Road%20Dover%20PA%2017315&output=embed"
+                />
+              </div>
+
+              <a 
+                href="https://www.google.com/maps/dir/?api=1&destination=3005+Emig+Mill+Road+Dover+PA+17315" 
+                target="_blank" 
+                rel="noreferrer"
+                className="btn-secondary w-full justify-center"
+              >
+                Get Directions
+              </a>
             </div>
 
-            <a 
-              href="https://www.google.com/maps/dir/?api=1&destination=3005+Emig+Mill+Road+Dover+PA+17315" 
-              target="_blank" 
-              rel="noreferrer"
-              className="btn-secondary w-full mt-4"
-            >
-              Get Directions
-            </a>
+            {/* Contact info */}
+            <div className="card-church">
+              <h3 className="font-semibold text-lg mb-4">Contact Us</h3>
+              <div className="space-y-3">
+                <a 
+                  href="tel:717-764-0252" 
+                  className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-secondary transition-colors"
+                >
+                  <Phone className="w-4 h-4 text-primary" />
+                  <span className="font-medium">717-764-0252</span>
+                </a>
+                <a 
+                  href="mailto:newcreation25@comcast.net" 
+                  className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-secondary transition-colors"
+                >
+                  <Mail className="w-4 h-4 text-primary" />
+                  <span className="font-medium break-all">newcreation25@comcast.net</span>
+                </a>
+              </div>
+            </div>
           </div>
 
-          {/* Contact card */}
+          {/* Contact form */}
           <div className="card-church">
-            <h3 className="font-semibold text-base mb-3">Contact</h3>
-            <p className="text-xs text-muted-foreground mb-4">Fastest way to reach the church office:</p>
-
-            <div className="space-y-3 mb-6">
-              <a 
-                href="tel:717-764-0252" 
-                className="flex items-center gap-3 p-3 rounded-xl border border-border hover:bg-secondary transition-colors"
-              >
-                <Phone className="w-4 h-4 text-primary" />
-                <span className="text-sm font-medium">717-764-0252</span>
-              </a>
-              <a 
-                href="mailto:newcreation25@comcast.net" 
-                className="flex items-center gap-3 p-3 rounded-xl border border-border hover:bg-secondary transition-colors"
-              >
-                <Mail className="w-4 h-4 text-primary" />
-                <span className="text-sm font-medium break-all">newcreation25@comcast.net</span>
-              </a>
-            </div>
-
-            <div className="h-px bg-border my-5" />
-
-            <h3 className="font-semibold text-base mb-2">Quick Message</h3>
-            <p className="text-xs text-muted-foreground mb-4">
-              Send us a message and we'll get back to you soon.
+            <h3 className="font-semibold text-lg mb-2">Let Us Know You're Coming</h3>
+            <p className="text-sm text-muted-foreground mb-6">
+              Optional, but it helps us prepare a warm welcome for you.
             </p>
 
             {isSubmitted ? (
-              <div className="flex flex-col items-center justify-center py-8 text-center">
+              <div className="flex flex-col items-center justify-center py-12 text-center">
                 <CheckCircle className="w-12 h-12 text-primary mb-4" />
-                <h4 className="font-semibold text-lg mb-2">Message Sent!</h4>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Thank you for reaching out. We'll get back to you soon.
+                <h4 className="font-semibold text-xl mb-2">We Got Your Message</h4>
+                <p className="text-muted-foreground mb-6">
+                  Looking forward to seeing you Sunday.
                 </p>
                 <button 
                   onClick={() => setIsSubmitted(false)} 
                   className="btn-secondary"
                 >
-                  Send Another Message
+                  Send Another
                 </button>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-3">
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label htmlFor="name" className="text-sm font-medium mb-1 block">Name *</label>
+                  <label htmlFor="name" className="text-sm font-medium mb-2 block">Name *</label>
                   <input
                     id="name"
                     type="text"
@@ -148,7 +152,7 @@ export function PlanVisit() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="email" className="text-sm font-medium mb-1 block">Email *</label>
+                  <label htmlFor="email" className="text-sm font-medium mb-2 block">Email *</label>
                   <input
                     id="email"
                     type="email"
@@ -161,12 +165,12 @@ export function PlanVisit() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="message" className="text-sm font-medium mb-1 block">Question (optional)</label>
+                  <label htmlFor="message" className="text-sm font-medium mb-2 block">Questions (optional)</label>
                   <textarea
                     id="message"
                     className="form-input resize-y"
                     rows={3}
-                    placeholder="Anything you'd like to ask?"
+                    placeholder="Anything you'd like us to know?"
                     value={formState.message}
                     onChange={(e) => setFormState({ ...formState, message: e.target.value })}
                     disabled={isSubmitting}
@@ -174,7 +178,7 @@ export function PlanVisit() {
                 </div>
                 <button 
                   type="submit" 
-                  className="btn-primary w-full flex items-center justify-center gap-2"
+                  className="btn-primary w-full justify-center"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? (

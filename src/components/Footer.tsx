@@ -4,29 +4,26 @@ export function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="py-10 border-t border-border bg-card">
-      <div className="container max-w-6xl mx-auto px-5">
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
+    <footer className="py-12 border-t border-border bg-secondary/30">
+      <div className="container max-w-5xl mx-auto px-5">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-10">
           {/* Brand */}
           <div>
-            <div className="flex items-center gap-3 mb-3">
-              <div 
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-xs"
-                style={{ background: 'var(--gold-gradient)' }}
-              >
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-semibold text-xs">
                 NC
               </div>
-              <strong className="text-sm">New Creation</strong>
+              <span className="font-semibold">New Creation</span>
             </div>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground leading-relaxed">
               3005 Emig Mill Road<br />
-              Dover PA 17315
+              Dover, PA 17315
             </p>
           </div>
 
           {/* Service Times */}
           <div>
-            <strong className="text-sm block mb-3">Service Times</strong>
+            <h4 className="font-semibold mb-4">Sundays</h4>
             <div className="text-sm text-muted-foreground space-y-1">
               <p>8:00 AM Traditional</p>
               <p>9:15 AM Sunday School</p>
@@ -36,8 +33,8 @@ export function Footer() {
 
           {/* Quick Links */}
           <div>
-            <strong className="text-sm block mb-3">Quick Links</strong>
-            <div className="text-sm space-y-1">
+            <h4 className="font-semibold mb-4">Quick Links</h4>
+            <div className="text-sm space-y-2">
               <a href="#plan" className="block text-muted-foreground hover:text-foreground transition-colors">Plan a Visit</a>
               <a href="#ministries" className="block text-muted-foreground hover:text-foreground transition-colors">Ministries</a>
               <a href="#watch" className="block text-muted-foreground hover:text-foreground transition-colors">Watch</a>
@@ -47,12 +44,12 @@ export function Footer() {
 
           {/* Contact */}
           <div>
-            <strong className="text-sm block mb-3">Contact</strong>
-            <div className="text-sm text-muted-foreground space-y-1">
+            <h4 className="font-semibold mb-4">Contact</h4>
+            <div className="text-sm text-muted-foreground space-y-2 mb-4">
               <a href="tel:717-764-0252" className="block hover:text-foreground transition-colors">717-764-0252</a>
               <a href="mailto:newcreation25@comcast.net" className="block hover:text-foreground transition-colors break-all">newcreation25@comcast.net</a>
             </div>
-            <div className="flex gap-3 mt-4">
+            <div className="flex gap-2">
               <a 
                 href="https://www.youtube.com/@newcreationcommunitychurch4561" 
                 target="_blank" 
@@ -75,7 +72,7 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="pt-6 border-t border-border">
+        <div className="pt-8 border-t border-border">
           <p className="text-xs text-muted-foreground">
             © {currentYear} New Creation Community Church
           </p>

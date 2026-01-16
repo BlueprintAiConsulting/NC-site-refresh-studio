@@ -1,100 +1,48 @@
-import { MapPin, Clock, Phone, Mail, Youtube, Facebook } from "lucide-react";
+import { MapPin, Clock, ArrowRight } from "lucide-react";
 
 export function Hero() {
   return (
-    <section 
-      className="py-16 md:py-20 border-b border-border"
-      style={{ background: 'var(--hero-gradient)' }}
-    >
-      <div className="container max-w-6xl mx-auto px-5">
-        <div className="grid lg:grid-cols-[1.2fr_0.8fr] gap-8 items-start">
-          {/* Left content */}
-          <div>
-            <p className="text-xs uppercase tracking-widest text-muted-foreground mb-3">
-              Welcome
-            </p>
-            <h1 className="text-4xl md:text-5xl font-bold leading-tight tracking-tight mb-4">
-              Come as you are. You are welcome here.
-            </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl mb-5">
-              Join us this Sunday. Traditional service at <strong className="text-foreground">8:00 AM</strong> and 
-              contemporary service at <strong className="text-foreground">10:30 AM</strong>. 
-              Sunday School at <strong className="text-foreground">9:15 AM</strong> for adults and children. 
-              We are located at <strong className="text-foreground">3005 Emig Mill Road, Dover PA 17315</strong>.
-            </p>
+    <section className="py-16 md:py-24 lg:py-32">
+      <div className="container max-w-5xl mx-auto px-5">
+        {/* Main content - centered, focused */}
+        <div className="max-w-3xl">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-semibold mb-6 text-foreground">
+            You're welcome here.
+          </h1>
+          
+          <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-2xl leading-relaxed">
+            Join us this Sunday for worship. We're a community rooted in faith, 
+            growing together, and open to all.
+          </p>
 
-            {/* Pills */}
-            <div className="flex flex-wrap gap-2 mb-6">
-              <span className="pill"><span className="pill-dot" aria-hidden="true" />GriefShare support</span>
-              <span className="pill"><span className="pill-dot" aria-hidden="true" />Men's Alliance</span>
-              <span className="pill"><span className="pill-dot" aria-hidden="true" />Watch online</span>
-              <span className="pill"><span className="pill-dot" aria-hidden="true" />Give online</span>
+          {/* Service times - clear, scannable */}
+          <div className="flex flex-col sm:flex-row gap-4 sm:gap-8 mb-10 text-muted-foreground">
+            <div className="service-time">
+              <Clock className="w-4 h-4 text-primary" />
+              <span><strong>8:00 AM</strong> Traditional</span>
             </div>
-
-            {/* CTAs */}
-            <div className="flex flex-wrap gap-3 mb-6">
-              <a href="#plan" className="btn-primary">Plan a Visit</a>
-              <a href="#watch" className="btn-secondary">Watch Online</a>
-              <a href="#give" className="btn-secondary">Give</a>
-            </div>
-
-            {/* Callout */}
-            <div className="callout-box">
-              <strong className="text-sm">New here?</strong>
-              <span className="text-sm text-muted-foreground ml-1">
-                Start with "Plan a Visit." We'll help you feel comfortable on your first Sunday.
-              </span>
+            <div className="service-time">
+              <Clock className="w-4 h-4 text-primary" />
+              <span><strong>10:30 AM</strong> Contemporary</span>
             </div>
           </div>
 
-          {/* Quick details card */}
-          <aside className="card-church" aria-label="Quick details">
-            <h3 className="font-semibold text-base mb-3">Service Times</h3>
-            <div className="space-y-2 text-sm text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-primary shrink-0" />
-                <span><strong className="text-foreground">8:00 AM</strong> Traditional</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-primary shrink-0" />
-                <span><strong className="text-foreground">9:15 AM</strong> Sunday School</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-primary shrink-0" />
-                <span><strong className="text-foreground">10:30 AM</strong> Contemporary</span>
-              </div>
-            </div>
+          {/* Primary CTA */}
+          <div className="flex flex-col sm:flex-row gap-3 mb-10">
+            <a href="#plan" className="btn-primary">
+              Plan a Visit
+              <ArrowRight className="w-4 h-4" />
+            </a>
+            <a href="#watch" className="btn-secondary">
+              Watch Online
+            </a>
+          </div>
 
-            <div className="h-px bg-border my-4" />
-
-            <h3 className="font-semibold text-base mb-3">Contact</h3>
-            <div className="space-y-2 text-sm text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <Phone className="w-4 h-4 text-primary shrink-0" />
-                <a href="tel:717-764-0252" className="hover:text-foreground transition-colors">717-764-0252</a>
-              </div>
-              <div className="flex items-center gap-2">
-                <Mail className="w-4 h-4 text-primary shrink-0" />
-                <a href="mailto:newcreation25@comcast.net" className="hover:text-foreground transition-colors break-all">
-                  newcreation25@comcast.net
-                </a>
-              </div>
-              <div className="flex items-start gap-2">
-                <MapPin className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                <span>3005 Emig Mill Road, Dover PA 17315</span>
-              </div>
-            </div>
-
-            <div className="h-px bg-border my-4" />
-
-            <a href="#plan" className="btn-primary w-full">Let us know you're coming</a>
-            
-            <p className="text-xs text-muted-foreground mt-3 flex items-center gap-2">
-              <Youtube className="w-4 h-4" />
-              <Facebook className="w-4 h-4" />
-              <span>Live streaming available</span>
-            </p>
-          </aside>
+          {/* Location - subtle, accessible */}
+          <div className="flex items-start gap-2 text-sm text-muted-foreground">
+            <MapPin className="w-4 h-4 mt-0.5 shrink-0" />
+            <span>3005 Emig Mill Road, Dover PA 17315</span>
+          </div>
         </div>
       </div>
     </section>

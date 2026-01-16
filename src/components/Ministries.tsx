@@ -1,80 +1,64 @@
 import { Heart, Users, ExternalLink } from "lucide-react";
 
+const ministries = [
+  {
+    icon: Heart,
+    title: "GriefShare",
+    description: "A 13-week support group for those walking through loss. Thursdays, 3:30–5:00 PM.",
+    detail: "$20 registration (scholarships available)",
+    cta: { label: "Request Info", href: "#contact" },
+  },
+  {
+    icon: Users,
+    title: "Men's Alliance",
+    description: "Brotherhood, growth, and accountability. Outdoor workout followed by devotional.",
+    detail: "Tuesdays at 6:30 PM",
+    cta: { label: "Join Us", href: "#contact" },
+  },
+];
+
 export function Ministries() {
   return (
-    <section id="ministries" className="section-church bg-card border-t border-border">
-      <div className="container max-w-6xl mx-auto px-5">
-        <h2 className="text-2xl md:text-3xl font-bold mb-3">Ministries & Support</h2>
-        <p className="text-muted-foreground max-w-2xl mb-8">
-          Clear pathways to help people take the next step and find support.
+    <section id="ministries" className="section-church bg-secondary/50 border-t border-border">
+      <div className="container max-w-5xl mx-auto px-5">
+        <h2 className="text-3xl md:text-4xl font-semibold mb-4">Ministries & Support</h2>
+        <p className="text-muted-foreground text-lg mb-12 max-w-2xl">
+          Ways to connect, grow, and find support at your own pace.
         </p>
 
-        <div className="grid md:grid-cols-2 gap-4 mb-4">
-          {/* GriefShare */}
-          <div className="card-church">
-            <div 
-              className="w-10 h-10 rounded-xl flex items-center justify-center mb-4"
-              style={{ background: 'hsl(var(--accent-soft))' }}
-            >
-              <Heart className="w-5 h-5 text-primary" />
+        <div className="grid md:grid-cols-2 gap-6 mb-6">
+          {ministries.map((ministry) => (
+            <div key={ministry.title} className="card-church">
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+                <ministry.icon className="w-5 h-5 text-primary" />
+              </div>
+              <h3 className="font-semibold text-lg mb-2">{ministry.title}</h3>
+              <p className="text-muted-foreground text-sm mb-2">{ministry.description}</p>
+              <p className="text-sm font-medium mb-4">{ministry.detail}</p>
+              <a href={ministry.cta.href} className="btn-primary">
+                {ministry.cta.label}
+              </a>
             </div>
-            <h3 className="font-semibold text-base mb-2">GriefShare</h3>
-            <p className="text-sm text-muted-foreground mb-3">
-              Support and encouragement for those walking through loss.
-            </p>
-            <div className="text-xs text-muted-foreground mb-4">
-              <strong className="text-foreground">Typical format:</strong> 13-week sessions • 
-              <strong className="text-foreground"> Thursdays</strong> 3:30–5:00 PM • 
-              <strong className="text-foreground"> Cost:</strong> $20 (scholarships available)
-            </div>
-            <a href="#contact" className="btn-primary">Request Info</a>
-          </div>
+          ))}
+        </div>
 
-          {/* DivorceCare */}
-          <div className="card-church">
-            <div 
-              className="w-10 h-10 rounded-xl flex items-center justify-center mb-4"
-              style={{ background: 'hsl(var(--accent-soft))' }}
-            >
-              <Heart className="w-5 h-5 text-primary" />
-            </div>
-            <h3 className="font-semibold text-base mb-2">DivorceCare</h3>
-            <p className="text-sm text-muted-foreground mb-3">
-              A Christ-centered program for those experiencing separation or divorce.
-            </p>
-            <div className="text-xs text-muted-foreground mb-4">
-              <strong className="text-foreground">Status:</strong> Not currently offered (we can help you find a nearby group).
+        {/* DivorceCare note */}
+        <div className="card-church">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h3 className="font-semibold text-lg mb-1">DivorceCare</h3>
+              <p className="text-muted-foreground text-sm">
+                Not currently offered here, but we can help you find a nearby group.
+              </p>
             </div>
             <a 
               href="https://www.divorcecare.org/" 
               target="_blank" 
               rel="noreferrer" 
-              className="btn-secondary inline-flex items-center gap-2"
+              className="btn-secondary shrink-0"
             >
               Find a Group <ExternalLink className="w-3 h-3" />
             </a>
-          </div>
-        </div>
-
-        {/* Men's Alliance */}
-        <div className="card-church">
-          <div className="flex items-start gap-4">
-            <div 
-              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-              style={{ background: 'hsl(var(--accent-soft))' }}
-            >
-              <Users className="w-5 h-5 text-primary" />
-            </div>
-            <div className="flex-1">
-              <h3 className="font-semibold text-base mb-2">Men's Alliance</h3>
-              <p className="text-sm text-muted-foreground mb-3">
-                Brotherhood, growth, and accountability in a welcoming group.
-              </p>
-              <div className="text-xs text-muted-foreground mb-4">
-                <strong className="text-foreground">Meets:</strong> Tuesdays at 6:30 PM • Outdoor workout + devotional
-              </div>
-              <a href="#contact" className="btn-primary">Join Us</a>
-            </div>
           </div>
         </div>
       </div>
