@@ -1,7 +1,24 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "npm:resend@2.0.0";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+
+async function sendEmail(options: { from: string; to: string[]; subject: string; html: string }) {
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${RESEND_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(options),
+  });
+  
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Failed to send email: ${error}`);
+  }
+  
+  return response.json();
+}
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -38,7 +55,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Send notification email to the church
-    const churchEmailResponse = await resend.emails.send({
+    const churchEmailResponse = await sendEmail({
       from: "New Creation Website <onboarding@resend.dev>",
       to: ["newcreation25@comcast.net"],
       subject: `New Contact Form Submission from ${name}`,
@@ -56,7 +73,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("Church notification email sent:", churchEmailResponse);
 
     // Send confirmation email to the visitor
-    const visitorEmailResponse = await resend.emails.send({
+    const visitorEmailResponse = await sendEmail({
       from: "New Creation Community Church <onboarding@resend.dev>",
       to: [email],
       subject: "Thank you for contacting New Creation Community Church",
