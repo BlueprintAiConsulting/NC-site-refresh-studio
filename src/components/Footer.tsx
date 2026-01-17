@@ -1,5 +1,5 @@
 import { Youtube, Facebook } from "lucide-react";
-import { UMCLogo } from "./UMCLogo";
+import churchLogo from "@/assets/church-logo.png";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
@@ -11,7 +11,7 @@ export function Footer() {
           {/* Brand */}
           <div>
             <div className="flex items-center gap-3 mb-4">
-              <UMCLogo size={28} />
+              <img src={churchLogo} alt="New Creation Community Church" className="w-7 h-7 object-contain" />
               <div className="flex flex-col">
                 <span className="font-semibold leading-tight">New Creation</span>
                 <span className="text-xs text-muted-foreground">Community Church</span>
