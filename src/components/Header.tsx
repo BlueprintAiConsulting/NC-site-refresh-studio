@@ -33,7 +33,7 @@ export function Header() {
             <UMCLogo size={32} />
             <div className="flex flex-col">
               <span className="text-sm font-semibold leading-tight">New Creation</span>
-              <span className="text-xs text-muted-foreground leading-tight">United Methodist Church</span>
+              <span className="text-xs text-muted-foreground leading-tight">Community Church</span>
             </div>
           </Link>
 

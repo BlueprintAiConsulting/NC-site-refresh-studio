@@ -14,7 +14,7 @@ export function Footer() {
               <UMCLogo size={28} />
               <div className="flex flex-col">
                 <span className="font-semibold leading-tight">New Creation</span>
-                <span className="text-xs text-muted-foreground">United Methodist Church</span>
+                <span className="text-xs text-muted-foreground">Community Church</span>
               </div>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
@@ -76,7 +76,7 @@ export function Footer() {
 
         <div className="pt-8 border-t border-border">
           <p className="text-xs text-muted-foreground">
-            © {currentYear} New Creation United Methodist Church
+            © {currentYear} New Creation Community Church
           </p>
         </div>
       </div>
