@@ -56,7 +56,7 @@ const navItems: NavItem[] = [
     ],
   },
   { href: "#give", label: "Give", isAnchor: true },
-  { href: "#merch", label: "Merch", isAnchor: true },
+  
   { href: "#room-reservations", label: "Rooms", isAnchor: true },
 ];
 
