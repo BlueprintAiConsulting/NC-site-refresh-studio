@@ -25,7 +25,7 @@ export function Footer() {
 
           {/* Service Times */}
           <div>
-            <h4 className="font-semibold mb-4 text-white">Sundays</h4>
+            <h4 className="font-semibold mb-4 text-white font-['Playfair_Display']">Sundays</h4>
             <div className="text-sm text-slate-300 space-y-1">
               <p>8:00 AM Traditional</p>
               <p>9:15 AM Sunday School</p>
@@ -35,7 +35,7 @@ export function Footer() {
 
           {/* Quick Links */}
           <div>
-            <h4 className="font-semibold mb-4 text-white">Quick Links</h4>
+            <h4 className="font-semibold mb-4 text-white font-['Playfair_Display']">Quick Links</h4>
             <div className="text-sm space-y-2">
               <a href="#plan" className="block text-slate-300 hover:text-white transition-colors">Plan a Visit</a>
               <a href="#ministries" className="block text-slate-300 hover:text-white transition-colors">Ministries</a>
@@ -46,7 +46,7 @@ export function Footer() {
 
           {/* Contact */}
           <div>
-            <h4 className="font-semibold mb-4 text-white">Contact</h4>
+            <h4 className="font-semibold mb-4 text-white font-['Playfair_Display']">Contact</h4>
             <div className="text-sm text-slate-300 space-y-2 mb-4">
               <a href="tel:717-764-0252" className="block hover:text-white transition-colors">717-764-0252</a>
               <a href="mailto:newcreation25@comcast.net" className="block hover:text-white transition-colors break-all">newcreation25@comcast.net</a>
