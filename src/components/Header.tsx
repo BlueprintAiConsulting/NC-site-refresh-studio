@@ -1,30 +1,179 @@
 import { useState } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, ChevronDown } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { UMCLogo } from "./UMCLogo";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
-const navLinks = [
-  { href: "#about", label: "About", isAnchor: true },
-  { href: "#worship", label: "Worship", isAnchor: true },
-  { href: "#grow", label: "Grow", isAnchor: true },
-  { href: "#serve", label: "Serve", isAnchor: true },
-  { href: "#connect", label: "Connect", isAnchor: true },
+interface NavItem {
+  label: string;
+  href?: string;
+  isAnchor?: boolean;
+  children?: { href: string; label: string; isAnchor?: boolean }[];
+}
+
+const navItems: NavItem[] = [
+  {
+    label: "About",
+    children: [
+      { href: "#about", label: "Our Story", isAnchor: true },
+      { href: "/leadership", label: "Leadership", isAnchor: false },
+    ],
+  },
+  {
+    label: "Worship",
+    children: [
+      { href: "#worship", label: "Service Times", isAnchor: true },
+      { href: "#worship", label: "Watch Online", isAnchor: true },
+    ],
+  },
+  {
+    label: "Grow",
+    children: [
+      { href: "#grow", label: "Bible Studies", isAnchor: true },
+      { href: "#grow", label: "Small Groups", isAnchor: true },
+      { href: "#grow", label: "Youth Ministry", isAnchor: true },
+    ],
+  },
+  {
+    label: "Serve",
+    children: [
+      { href: "#serve", label: "Volunteer", isAnchor: true },
+      { href: "#serve", label: "Outreach", isAnchor: true },
+      { href: "#serve", label: "Missions", isAnchor: true },
+    ],
+  },
+  {
+    label: "Connect",
+    children: [
+      { href: "#connect", label: "Join a Group", isAnchor: true },
+      { href: "#events", label: "Events", isAnchor: true },
+      { href: "#contact", label: "Contact Us", isAnchor: true },
+    ],
+  },
   { href: "#give", label: "Give", isAnchor: true },
   { href: "#merch", label: "Merch", isAnchor: true },
-  { href: "#room-reservations", label: "Room Reservations", isAnchor: true },
+  { href: "#room-reservations", label: "Rooms", isAnchor: true },
   { href: "#little-lights", label: "Little Lights", isAnchor: true },
 ];
 
 export function Header() {
   const [isOpen, setIsOpen] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const location = useLocation();
   const isHomePage = location.pathname === "/";
 
-  const getHref = (link: typeof navLinks[0]) => {
-    if (link.isAnchor && !isHomePage) {
-      return `/${link.href}`;
+  const getHref = (href: string, isAnchor?: boolean) => {
+    if (isAnchor && !isHomePage) {
+      return `/${href}`;
     }
-    return link.href;
+    return href;
+  };
+
+  const renderNavItem = (item: NavItem) => {
+    if (item.children) {
+      return (
+        <DropdownMenu key={item.label}>
+          <DropdownMenuTrigger className="link-nav flex items-center gap-1 outline-none">
+            {item.label}
+            <ChevronDown className="w-3 h-3" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="bg-background border border-border shadow-lg z-[100]">
+            {item.children.map((child) =>
+              child.isAnchor ? (
+                <DropdownMenuItem key={child.href + child.label} asChild>
+                  <a href={getHref(child.href, child.isAnchor)} className="cursor-pointer">
+                    {child.label}
+                  </a>
+                </DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem key={child.href + child.label} asChild>
+                  <Link to={child.href} className="cursor-pointer">
+                    {child.label}
+                  </Link>
+                </DropdownMenuItem>
+              )
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      );
+    }
+
+    return item.isAnchor ? (
+      <a key={item.href} href={getHref(item.href!, item.isAnchor)} className="link-nav">
+        {item.label}
+      </a>
+    ) : (
+      <Link key={item.href} to={item.href!} className="link-nav">
+        {item.label}
+      </Link>
+    );
+  };
+
+  const renderMobileItem = (item: NavItem) => {
+    if (item.children) {
+      const isExpanded = openDropdown === item.label;
+      return (
+        <div key={item.label}>
+          <button
+            className="flex items-center justify-between w-full py-3 px-2 text-foreground font-medium hover:bg-secondary rounded-lg transition-colors"
+            onClick={() => setOpenDropdown(isExpanded ? null : item.label)}
+          >
+            {item.label}
+            <ChevronDown className={`w-4 h-4 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+          </button>
+          {isExpanded && (
+            <div className="pl-4 space-y-1">
+              {item.children.map((child) =>
+                child.isAnchor ? (
+                  <a
+                    key={child.href + child.label}
+                    href={getHref(child.href, child.isAnchor)}
+                    className="block py-2 px-2 text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition-colors"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    {child.label}
+                  </a>
+                ) : (
+                  <Link
+                    key={child.href + child.label}
+                    to={child.href}
+                    className="block py-2 px-2 text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition-colors"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    {child.label}
+                  </Link>
+                )
+              )}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    return item.isAnchor ? (
+      <a
+        key={item.href}
+        href={getHref(item.href!, item.isAnchor)}
+        className="block py-3 px-2 text-foreground font-medium hover:bg-secondary rounded-lg transition-colors"
+        onClick={() => setIsOpen(false)}
+      >
+        {item.label}
+      </a>
+    ) : (
+      <Link
+        key={item.href}
+        to={item.href!}
+        className="block py-3 px-2 text-foreground font-medium hover:bg-secondary rounded-lg transition-colors"
+        onClick={() => setIsOpen(false)}
+      >
+        {item.label}
+      </Link>
+    );
   };
 
   return (
@@ -42,17 +191,7 @@ export function Header() {
 
           {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-1" aria-label="Site">
-            {navLinks.map((link) => (
-              link.isAnchor ? (
-                <a key={link.href} href={getHref(link)} className="link-nav">
-                  {link.label}
-                </a>
-              ) : (
-                <Link key={link.href} to={link.href} className="link-nav">
-                  {link.label}
-                </Link>
-              )
-            ))}
+            {navItems.map(renderNavItem)}
           </nav>
 
           {/* Mobile menu button */}
@@ -70,31 +209,11 @@ export function Header() {
         {/* Mobile drawer */}
         {isOpen && (
           <div id="mobile-menu" className="md:hidden border-t border-border py-4 space-y-1">
-            {navLinks.map((link) => (
-              link.isAnchor ? (
-                <a
-                  key={link.href}
-                  href={getHref(link)}
-                  className="block py-3 px-2 text-foreground font-medium hover:bg-secondary rounded-lg transition-colors"
-                  onClick={() => setIsOpen(false)}
-                >
-                  {link.label}
-                </a>
-              ) : (
-                <Link
-                  key={link.href}
-                  to={link.href}
-                  className="block py-3 px-2 text-foreground font-medium hover:bg-secondary rounded-lg transition-colors"
-                  onClick={() => setIsOpen(false)}
-                >
-                  {link.label}
-                </Link>
-              )
-            ))}
+            {navItems.map(renderMobileItem)}
             <div className="pt-4">
-              <a 
+              <a
                 href={isHomePage ? "#plan" : "/#plan"}
-                className="btn-primary w-full justify-center" 
+                className="btn-primary w-full justify-center"
                 onClick={() => setIsOpen(false)}
               >
                 Plan a Visit
