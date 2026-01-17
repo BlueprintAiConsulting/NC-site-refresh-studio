@@ -77,7 +77,7 @@ export function Header() {
     if (item.children) {
       return (
         <DropdownMenu key={item.label}>
-          <DropdownMenuTrigger className="link-nav flex items-center gap-1 outline-none">
+          <DropdownMenuTrigger className="link-nav flex items-center gap-1 outline-none text-white hover:text-white/80">
             {item.label}
             <ChevronDown className="w-3 h-3" />
           </DropdownMenuTrigger>
@@ -103,11 +103,11 @@ export function Header() {
     }
 
     return item.isAnchor ? (
-      <a key={item.href} href={getHref(item.href!, item.isAnchor)} className="link-nav">
+      <a key={item.href} href={getHref(item.href!, item.isAnchor)} className="link-nav text-white hover:text-white/80">
         {item.label}
       </a>
     ) : (
-      <Link key={item.href} to={item.href!} className="link-nav">
+      <Link key={item.href} to={item.href!} className="link-nav text-white hover:text-white/80">
         {item.label}
       </Link>
     );
@@ -195,7 +195,7 @@ export function Header() {
 
           {/* Mobile menu button */}
           <button
-            className="md:hidden p-2 -mr-2 text-muted-foreground hover:text-foreground transition-colors"
+            className="md:hidden p-2 -mr-2 text-white hover:text-white/80 transition-colors"
             onClick={() => setIsOpen(!isOpen)}
             aria-expanded={isOpen}
             aria-controls="mobile-menu"
