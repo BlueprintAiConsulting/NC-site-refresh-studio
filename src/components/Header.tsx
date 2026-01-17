@@ -120,7 +120,7 @@ export function Header() {
       return (
         <div key={item.label}>
           <button
-            className="flex items-center justify-between w-full py-3 px-2 text-foreground font-medium hover:bg-secondary rounded-lg transition-colors"
+            className="flex items-center justify-between w-full py-3 px-2 text-white font-medium hover:bg-slate-800 rounded-lg transition-colors"
             onClick={() => setOpenDropdown(isExpanded ? null : item.label)}
           >
             {item.label}
@@ -133,7 +133,7 @@ export function Header() {
                   <a
                     key={child.href + child.label}
                     href={getHref(child.href, child.isAnchor)}
-                    className="block py-2 px-2 text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition-colors"
+                    className="block py-2 px-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
                     onClick={() => setIsOpen(false)}
                   >
                     {child.label}
@@ -142,7 +142,7 @@ export function Header() {
                   <Link
                     key={child.href + child.label}
                     to={child.href}
-                    className="block py-2 px-2 text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition-colors"
+                    className="block py-2 px-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
                     onClick={() => setIsOpen(false)}
                   >
                     {child.label}
@@ -159,7 +159,7 @@ export function Header() {
       <a
         key={item.href}
         href={getHref(item.href!, item.isAnchor)}
-        className="block py-3 px-2 text-foreground font-medium hover:bg-secondary rounded-lg transition-colors"
+        className="block py-3 px-2 text-white font-medium hover:bg-slate-800 rounded-lg transition-colors"
         onClick={() => setIsOpen(false)}
       >
         {item.label}
@@ -168,7 +168,7 @@ export function Header() {
       <Link
         key={item.href}
         to={item.href!}
-        className="block py-3 px-2 text-foreground font-medium hover:bg-secondary rounded-lg transition-colors"
+        className="block py-3 px-2 text-white font-medium hover:bg-slate-800 rounded-lg transition-colors"
         onClick={() => setIsOpen(false)}
       >
         {item.label}
