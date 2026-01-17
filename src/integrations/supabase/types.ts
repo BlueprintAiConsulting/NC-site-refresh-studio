@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      contact_rate_limits: {
+        Row: {
+          id: string
+          ip_address: string
+          submitted_at: string
+        }
+        Insert: {
+          id?: string
+          ip_address: string
+          submitted_at?: string
+        }
+        Update: {
+          id?: string
+          ip_address?: string
+          submitted_at?: string
+        }
+        Relationships: []
+      }
       emergency_alerts: {
         Row: {
           alert_type: string
@@ -148,6 +166,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_old_rate_limits: { Args: never; Returns: undefined }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
