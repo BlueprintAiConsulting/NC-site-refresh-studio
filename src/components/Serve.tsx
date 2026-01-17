@@ -1,11 +1,13 @@
 import { HandHeart, Music, Baby, UtensilsCrossed, Megaphone, Users } from "lucide-react";
 import { FadeIn, StaggerContainer, StaggerItem } from "./animations/FadeIn";
+import worshipTeamImg from "@/assets/serve-worship-team.jpg";
 
 const serveOpportunities = [
   {
     icon: Music,
     title: "Worship Team",
     description: "Use your musical gifts to lead others in worship.",
+    image: worshipTeamImg,
   },
   {
     icon: Baby,
@@ -50,12 +52,27 @@ export function Serve() {
         <StaggerContainer className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {serveOpportunities.map((item) => (
             <StaggerItem key={item.title}>
-              <div className="card-church h-full">
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-                  <item.icon className="w-5 h-5 text-primary" />
+              <div className="card-church h-full overflow-hidden p-0">
+                {item.image ? (
+                  <div className="h-40 overflow-hidden">
+                    <img 
+                      src={item.image} 
+                      alt={item.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="h-40 bg-muted/50 flex items-center justify-center">
+                    <item.icon className="w-12 h-12 text-muted-foreground/50" />
+                  </div>
+                )}
+                <div className="p-6">
+                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+                    <item.icon className="w-5 h-5 text-primary" />
+                  </div>
+                  <h3 className="font-semibold text-lg mb-2">{item.title}</h3>
+                  <p className="text-muted-foreground text-sm">{item.description}</p>
                 </div>
-                <h3 className="font-semibold text-lg mb-2">{item.title}</h3>
-                <p className="text-muted-foreground text-sm">{item.description}</p>
               </div>
             </StaggerItem>
           ))}
