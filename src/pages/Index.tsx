@@ -11,7 +11,6 @@ import { Ministries } from "@/components/Ministries";
 import { Give } from "@/components/Give";
 import { Merch } from "@/components/Merch";
 import { RoomReservations } from "@/components/RoomReservations";
-import { LittleLights } from "@/components/LittleLights";
 import { Contact } from "@/components/Contact";
 import { Footer } from "@/components/Footer";
 
@@ -34,7 +33,6 @@ const Index = () => {
         <Give />
         <Merch />
         <RoomReservations />
-        <LittleLights />
         <Contact />
       </main>
       <Footer />

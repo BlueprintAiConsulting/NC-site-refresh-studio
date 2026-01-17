@@ -58,7 +58,6 @@ const navItems: NavItem[] = [
   { href: "#give", label: "Give", isAnchor: true },
   { href: "#merch", label: "Merch", isAnchor: true },
   { href: "#room-reservations", label: "Rooms", isAnchor: true },
-  { href: "#little-lights", label: "Little Lights", isAnchor: true },
 ];
 
 export function Header() {
