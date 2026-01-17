@@ -9,7 +9,7 @@ import { Events } from "@/components/Events";
 import { PlanVisit } from "@/components/PlanVisit";
 import { Ministries } from "@/components/Ministries";
 import { Give } from "@/components/Give";
-
+import { PhotoGallery } from "@/components/PhotoGallery";
 import { RoomReservations } from "@/components/RoomReservations";
 import { Contact } from "@/components/Contact";
 import { Footer } from "@/components/Footer";
@@ -31,7 +31,7 @@ const Index = () => {
         <PlanVisit />
         <Ministries />
         <Give />
-        
+        <PhotoGallery />
         <RoomReservations />
         <Contact />
       </main>

@@ -52,6 +52,7 @@ const navItems: NavItem[] = [
     children: [
       { href: "#connect", label: "Join a Group", isAnchor: true },
       { href: "#events", label: "Events", isAnchor: true },
+      { href: "#gallery", label: "Gallery", isAnchor: true },
       { href: "#contact", label: "Contact Us", isAnchor: true },
     ],
   },
