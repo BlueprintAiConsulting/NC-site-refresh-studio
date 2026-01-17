@@ -1,12 +1,17 @@
 import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
 import { About } from "@/components/About";
-import { WhatToExpect } from "@/components/WhatToExpect";
+import { Worship } from "@/components/Worship";
+import { Grow } from "@/components/Grow";
+import { Serve } from "@/components/Serve";
+import { Connect } from "@/components/Connect";
 import { Events } from "@/components/Events";
 import { PlanVisit } from "@/components/PlanVisit";
 import { Ministries } from "@/components/Ministries";
-import { Watch } from "@/components/Watch";
 import { Give } from "@/components/Give";
+import { Merch } from "@/components/Merch";
+import { RoomReservations } from "@/components/RoomReservations";
+import { LittleLights } from "@/components/LittleLights";
 import { Contact } from "@/components/Contact";
 import { Footer } from "@/components/Footer";
 
@@ -19,12 +24,17 @@ const Index = () => {
         <div id="top" />
         <Hero />
         <About />
-        <WhatToExpect />
+        <Worship />
+        <Grow />
+        <Serve />
+        <Connect />
         <Events />
         <PlanVisit />
         <Ministries />
-        <Watch />
         <Give />
+        <Merch />
+        <RoomReservations />
+        <LittleLights />
         <Contact />
       </main>
       <Footer />

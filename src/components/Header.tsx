@@ -4,12 +4,15 @@ import { Link, useLocation } from "react-router-dom";
 import { UMCLogo } from "./UMCLogo";
 
 const navLinks = [
-  { href: "#plan", label: "Plan a Visit", isAnchor: true },
-  { href: "/leadership", label: "Leadership", isAnchor: false },
-  { href: "#ministries", label: "Ministries", isAnchor: true },
-  { href: "#watch", label: "Watch", isAnchor: true },
+  { href: "#about", label: "About", isAnchor: true },
+  { href: "#worship", label: "Worship", isAnchor: true },
+  { href: "#grow", label: "Grow", isAnchor: true },
+  { href: "#serve", label: "Serve", isAnchor: true },
+  { href: "#connect", label: "Connect", isAnchor: true },
   { href: "#give", label: "Give", isAnchor: true },
-  { href: "#contact", label: "Contact", isAnchor: true },
+  { href: "#merch", label: "Merch", isAnchor: true },
+  { href: "#room-reservations", label: "Room Reservations", isAnchor: true },
+  { href: "#little-lights", label: "Little Lights", isAnchor: true },
 ];
 
 export function Header() {
