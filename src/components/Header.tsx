@@ -183,8 +183,8 @@ export function Header() {
           <Link to="/" className="flex items-center gap-3">
             <img src={churchLogo} alt="New Creation Community Church" className="w-16 h-16 object-contain" />
             <div className="flex flex-col">
-              <span className="text-sm font-semibold leading-tight">New Creation</span>
-              <span className="text-xs text-muted-foreground leading-tight">Community Church</span>
+              <span className="text-sm font-semibold leading-tight text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]">New Creation</span>
+              <span className="text-xs text-slate-300 leading-tight">Community Church</span>
             </div>
           </Link>
 
