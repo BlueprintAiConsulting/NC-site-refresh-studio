@@ -181,7 +181,7 @@ export function Header() {
         <nav className="flex items-center justify-between h-16" role="navigation" aria-label="Primary">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-3">
-            <img src={churchLogo} alt="New Creation Community Church" className="w-8 h-8 object-contain" />
+            <img src={churchLogo} alt="New Creation Community Church" className="w-16 h-16 object-contain" />
             <div className="flex flex-col">
               <span className="text-sm font-semibold leading-tight">New Creation</span>
               <span className="text-xs text-muted-foreground leading-tight">Community Church</span>
