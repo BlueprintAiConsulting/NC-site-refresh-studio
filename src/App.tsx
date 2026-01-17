@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Leadership from "./pages/Leadership";
 import Auth from "./pages/Auth";
 import AdminGallery from "./pages/AdminGallery";
+import AdminEvents from "./pages/AdminEvents";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => (
             <Route path="/leadership" element={<Leadership />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/admin/gallery" element={<AdminGallery />} />
+            <Route path="/admin/events" element={<AdminEvents />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
