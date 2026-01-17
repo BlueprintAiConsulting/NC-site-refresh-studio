@@ -176,7 +176,7 @@ export function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
+    <header className="sticky top-0 z-50 bg-slate-900 backdrop-blur-sm border-b border-border">
       <div className="container max-w-5xl mx-auto px-5">
         <nav className="flex items-center justify-between h-16" role="navigation" aria-label="Primary">
           {/* Logo */}
