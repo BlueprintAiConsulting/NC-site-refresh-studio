@@ -54,11 +54,11 @@ export function Serve() {
             <StaggerItem key={item.title}>
               <div className="card-church h-full overflow-hidden p-0">
                 {item.image ? (
-                  <div className="h-48 overflow-hidden">
+                  <div className="aspect-[4/3] overflow-hidden">
                     <img 
                       src={item.image} 
                       alt={item.title}
-                      className="w-full h-full object-cover object-top"
+                      className="w-full h-full object-contain bg-muted/30"
                     />
                   </div>
                 ) : (
