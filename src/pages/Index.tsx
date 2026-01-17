@@ -13,11 +13,13 @@ import { PhotoGallery } from "@/components/PhotoGallery";
 import { RoomReservations } from "@/components/RoomReservations";
 import { Contact } from "@/components/Contact";
 import { Footer } from "@/components/Footer";
+import { EmergencyAlert } from "@/components/EmergencyAlert";
 
 const Index = () => {
   return (
     <>
       <a className="skip-link" href="#main">Skip to content</a>
+      <EmergencyAlert />
       <Header />
       <main id="main">
         <div id="top" />
