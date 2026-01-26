@@ -36,6 +36,11 @@ bun run dev
 - `bun run test` - Run tests
 - `bun run test:watch` - Run tests in watch mode
 
+## Deployment
+
+GitHub Pages deployments are triggered from the `main` branch via the workflow at
+`.github/workflows/pages.yml`, with manual runs supported through `workflow_dispatch`.
+
 ## Tech Stack
 
 - **Vite** - Build tool and dev server
