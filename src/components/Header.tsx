@@ -69,15 +69,10 @@ export function Header() {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const location = useLocation();
   const isHomePage = location.pathname === "/";
-  const basePath = import.meta.env.BASE_URL ?? "/";
 
-  const getHref = (href: string, isAnchor?: boolean) => {
-    if (isAnchor && !isHomePage) {
-      const normalizedBase = basePath.endsWith("/") ? basePath : `${basePath}/`;
-      const normalizedHash = href.startsWith("#") ? href : `#${href}`;
-      return `${normalizedBase}${normalizedHash}`;
-    }
-    return href;
+  const getAnchorTo = (href: string) => {
+    const hash = href.startsWith("#") ? href : `#${href}`;
+    return isHomePage ? { hash } : { pathname: "/", hash };
   };
 
   const renderNavItem = (item: NavItem) => {
@@ -92,9 +87,9 @@ export function Header() {
             {item.children.map((child) =>
               child.isAnchor ? (
                 <DropdownMenuItem key={child.href + child.label} asChild>
-                  <a href={getHref(child.href, child.isAnchor)} className="cursor-pointer">
+                  <Link to={getAnchorTo(child.href)} className="cursor-pointer">
                     {child.label}
-                  </a>
+                  </Link>
                 </DropdownMenuItem>
               ) : (
                 <DropdownMenuItem key={child.href + child.label} asChild>
@@ -110,9 +105,9 @@ export function Header() {
     }
 
     return item.isAnchor ? (
-      <a key={item.href} href={getHref(item.href!, item.isAnchor)} className="link-nav text-white hover:text-white/80">
+      <Link key={item.href} to={getAnchorTo(item.href!)} className="link-nav text-white hover:text-white/80">
         {item.label}
-      </a>
+      </Link>
     ) : (
       <Link key={item.href} to={item.href!} className="link-nav text-white hover:text-white/80">
         {item.label}
@@ -136,14 +131,14 @@ export function Header() {
             <div className="pl-4 space-y-1">
               {item.children.map((child) =>
                 child.isAnchor ? (
-                  <a
+                  <Link
                     key={child.href + child.label}
-                    href={getHref(child.href, child.isAnchor)}
+                    to={getAnchorTo(child.href)}
                     className="block py-2 px-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
                     onClick={() => setIsOpen(false)}
                   >
                     {child.label}
-                  </a>
+                  </Link>
                 ) : (
                   <Link
                     key={child.href + child.label}
@@ -162,14 +157,14 @@ export function Header() {
     }
 
     return item.isAnchor ? (
-      <a
+      <Link
         key={item.href}
-        href={getHref(item.href!, item.isAnchor)}
+        to={getAnchorTo(item.href!)}
         className="block py-3 px-2 text-white font-medium hover:bg-slate-800 rounded-lg transition-colors"
         onClick={() => setIsOpen(false)}
       >
         {item.label}
-      </a>
+      </Link>
     ) : (
       <Link
         key={item.href}
