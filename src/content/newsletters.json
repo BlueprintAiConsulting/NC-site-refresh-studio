@@ -1,0 +1,15 @@
+{
+  "newsletters": [
+    {
+      "id": "1",
+      "title": "January 2026 Newsletter",
+      "month": "January",
+      "year": "2026",
+      "date": "2026-01-01",
+      "pdfUrl": "/newsletters/january-2026.pdf",
+      "coverImage": "",
+      "featured": true,
+      "description": "Latest updates from New Creation Community Church"
+    }
+  ]
+}
