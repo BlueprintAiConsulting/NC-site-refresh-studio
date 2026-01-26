@@ -69,10 +69,13 @@ export function Header() {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const location = useLocation();
   const isHomePage = location.pathname === "/";
+  const basePath = import.meta.env.BASE_URL ?? "/";
 
   const getHref = (href: string, isAnchor?: boolean) => {
     if (isAnchor && !isHomePage) {
-      return `/${href}`;
+      const normalizedBase = basePath.endsWith("/") ? basePath : `${basePath}/`;
+      const normalizedHash = href.startsWith("#") ? href : `#${href}`;
+      return `${normalizedBase}${normalizedHash}`;
     }
     return href;
   };

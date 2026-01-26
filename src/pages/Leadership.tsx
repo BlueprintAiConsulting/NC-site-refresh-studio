@@ -23,13 +23,6 @@ const pastors: StaffMember[] = [
     bio: "",
     email: "pastor@newcreationumc.org",
   },
-  {
-    id: "2",
-    name: "Pastor Sarah Johnson",
-    role: "Associate Pastor",
-    bio: "Pastor Sarah joined our team in 2019 and leads our contemporary worship service. She has a heart for youth ministry and community outreach.",
-    email: "sarah@newcreationumc.org",
-  },
 ];
 
 const staff: StaffMember[] = [
