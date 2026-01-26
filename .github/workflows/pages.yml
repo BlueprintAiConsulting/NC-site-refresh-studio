@@ -26,6 +26,8 @@ jobs:
 
       - name: Build
         run: npm run build
+        env:
+          VITE_BASE: /NC-site-refresh-studio/
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
