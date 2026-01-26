@@ -1,0 +1,32 @@
+{
+  "ministries": [
+    {
+      "id": "1",
+      "name": "Sunday School",
+      "description": "Bible study for all ages every Sunday at 9:15 AM",
+      "category": "education",
+      "contact": ""
+    },
+    {
+      "id": "2",
+      "name": "Youth Ministry",
+      "description": "Programs and activities for middle and high school students",
+      "category": "youth",
+      "contact": ""
+    },
+    {
+      "id": "3",
+      "name": "Music Ministry",
+      "description": "Join our choir or praise team",
+      "category": "worship",
+      "contact": ""
+    },
+    {
+      "id": "4",
+      "name": "Missions",
+      "description": "Local and global outreach opportunities",
+      "category": "outreach",
+      "contact": ""
+    }
+  ]
+}

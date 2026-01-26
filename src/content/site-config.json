@@ -1,0 +1,38 @@
+{
+  "church": {
+    "name": "New Creation Community Church",
+    "address": {
+      "street": "3005 Emig Mill Road",
+      "city": "Dover",
+      "state": "PA",
+      "zip": "17315"
+    },
+    "contact": {
+      "phone": "717-764-0252",
+      "email": "newcreation25@comcast.net"
+    }
+  },
+  "serviceTimes": [
+    {
+      "name": "Traditional Service",
+      "time": "8:00 AM",
+      "day": "Sunday"
+    },
+    {
+      "name": "Sunday School",
+      "time": "9:15 AM",
+      "day": "Sunday",
+      "description": "Adults and children"
+    },
+    {
+      "name": "Contemporary Service",
+      "time": "10:30 AM",
+      "day": "Sunday"
+    }
+  ],
+  "emergencyAlert": {
+    "enabled": false,
+    "message": "",
+    "type": "info"
+  }
+}
