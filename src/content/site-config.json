@@ -37,6 +37,11 @@
   },
   "socialMedia": {
     "facebook": "https://www.facebook.com/profile.php?id=100064726481440",
-    "youtube": "https://www.youtube.com/@newcreationcommunitychurch4561"
+    "youtube": "https://www.youtube.com/@newcreationcommunitychurch4561",
+    "liveStream": "https://www.youtube.com/@newcreationcommunitychurch4561/streams"
+  },
+  "googleCalendar": {
+    "enabled": true,
+    "calendarId": "your-calendar-id@group.calendar.google.com"
   }
 }

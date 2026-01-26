@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
-import { Calendar, Clock, MapPin, ArrowRight, Star, Loader2 } from "lucide-react";
+import { Calendar, Clock, MapPin, ArrowRight, Star, Loader2, ExternalLink } from "lucide-react";
 import { FadeIn, StaggerContainer, StaggerItem } from "./animations/FadeIn";
 import { supabase } from "@/integrations/supabase/client";
+import { useCalendarEvents } from "@/hooks/useCalendarEvents";
 import { format, parseISO } from "date-fns";
 
 interface Event {
@@ -20,6 +21,9 @@ interface Event {
 export function Events() {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Fetch Google Calendar events
+  const { data: calendarEvents, isLoading: calendarLoading } = useCalendarEvents(10);
 
   useEffect(() => {
     fetchEvents();
@@ -38,6 +42,11 @@ export function Events() {
     }
     setLoading(false);
   };
+
+  // Combine database events and calendar events
+  const isLoading = loading || calendarLoading;
+  const hasCalendarEvents = calendarEvents && calendarEvents.length > 0;
+  const hasDatabaseEvents = events.length > 0;
 
   const formatDate = (dateStr: string) => {
     try {
@@ -85,17 +94,76 @@ export function Events() {
           </p>
         </FadeIn>
 
-        {loading ? (
+        {isLoading ? (
           <div className="flex justify-center py-12">
             <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
           </div>
-        ) : events.length === 0 ? (
+        ) : !hasCalendarEvents && !hasDatabaseEvents ? (
           <div className="text-center py-12 text-muted-foreground">
             <Calendar className="w-12 h-12 mx-auto mb-4 opacity-50" />
             <p>No upcoming events scheduled. Check back soon!</p>
           </div>
         ) : (
           <>
+            {/* Google Calendar Events */}
+            {hasCalendarEvents && (
+              <FadeIn className="mb-8">
+                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <Calendar className="w-5 h-5 text-primary" />
+                  From Our Calendar
+                </h3>
+                <div className="grid gap-4 md:gap-6">
+                  {calendarEvents!.map((event) => (
+                    <article key={event.id} className="card-church flex flex-col sm:flex-row sm:items-center gap-4 hover:border-primary/20 transition-colors">
+                      <div className="shrink-0 flex items-center gap-3 sm:w-56">
+                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                          <Calendar className="w-5 h-5 text-primary" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-sm">{format(event.startDateTime, 'MMM d, yyyy')}</p>
+                          {event.time && (
+                            <p className="text-xs text-muted-foreground flex items-center gap-1">
+                              <Clock className="w-3 h-3" />
+                              {event.time}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-lg mb-1">{event.title}</h3>
+                        {event.description && (
+                          <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
+                            {event.description}
+                          </p>
+                        )}
+                        {event.location && (
+                          <p className="text-xs text-muted-foreground flex items-center gap-1">
+                            <MapPin className="w-3 h-3" />
+                            {event.location}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="shrink-0">
+                        <a
+                          href={event.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
+                        >
+                          View <ExternalLink className="w-3 h-3" />
+                        </a>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </FadeIn>
+            )}
+
+            {/* Database Events */}
+            {hasDatabaseEvents && (
+              <>
             {/* Featured Events */}
             {featuredEvents.length > 0 && (
               <FadeIn className="mb-8">
@@ -193,6 +261,8 @@ export function Events() {
                   </StaggerItem>
                 ))}
               </StaggerContainer>
+            )}
+            </>
             )}
           </>
         )}

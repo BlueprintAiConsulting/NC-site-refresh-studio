@@ -1,4 +1,3 @@
-updates
 import { Youtube, Facebook } from "lucide-react";
 import { FadeIn } from "../animations/FadeIn";
 import siteConfig from "@/content/site-config.json";

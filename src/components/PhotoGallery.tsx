@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
-import { X, Loader2 } from "lucide-react";
+import { useState } from "react";
+import { X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FadeIn } from "./animations/FadeIn";
-import { supabase } from "@/integrations/supabase/client";
+import { useGalleryImages } from "@/hooks/useGalleryImages";
 
 interface GalleryImage {
   id: string;
@@ -54,32 +54,15 @@ const fallbackImages: GalleryImage[] = [
 export function PhotoGallery() {
   const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null);
   const [activeCategory, setActiveCategory] = useState("All");
-  const [images, setImages] = useState<GalleryImage[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [categories, setCategories] = useState<string[]>(["All"]);
+  
+  // Fetch images from Supabase
+  const { data: dbImages, isLoading } = useGalleryImages();
 
-  useEffect(() => {
-    fetchImages();
-  }, []);
-
-  const fetchImages = async () => {
-    const { data, error } = await supabase
-      .from("gallery_images")
-      .select("id, src, alt, category")
-      .order("created_at", { ascending: false });
-
-    if (error || !data || data.length === 0) {
-      // Use fallback images if no images in database
-      setImages(fallbackImages);
-      const cats = ["All", ...new Set(fallbackImages.map((img) => img.category))];
-      setCategories(cats);
-    } else {
-      setImages(data);
-      const cats = ["All", ...new Set(data.map((img) => img.category))];
-      setCategories(cats);
-    }
-    setLoading(false);
-  };
+  // Use database images or fallback
+  const images = dbImages && dbImages.length > 0 ? dbImages : fallbackImages;
+  
+  // Extract unique categories
+  const categories = ["All", ...new Set(images.map((img) => img.category))];
 
   const filteredImages =
     activeCategory === "All"
@@ -118,9 +101,9 @@ export function PhotoGallery() {
         </FadeIn>
 
         {/* Gallery Grid */}
-        {loading ? (
-          <div className="flex justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+        {isLoading ? (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">Loading gallery...</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">

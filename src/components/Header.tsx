@@ -60,6 +60,8 @@ const navItems: NavItem[] = [
   { href: "#give", label: "Give", isAnchor: true },
   
   { href: "#room-reservations", label: "Rooms", isAnchor: true },
+  
+  { href: "/admin/login", label: "Admin", isAnchor: false },
 ];
 
 export function Header() {
