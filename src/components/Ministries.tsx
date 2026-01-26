@@ -1,7 +1,8 @@
 import { Heart, Users, ExternalLink } from "lucide-react";
 import { FadeIn, StaggerContainer, StaggerItem } from "./animations/FadeIn";
+import ministriesData from "@/content/ministries.json";
 
-const ministries = [
+const featuredMinistries = [
   {
     icon: Heart,
     title: "GriefShare",
@@ -32,7 +33,7 @@ export function Ministries() {
         </FadeIn>
 
         <StaggerContainer className="grid md:grid-cols-2 gap-6 mb-6">
-          {ministries.map((ministry) => (
+          {featuredMinistries.map((ministry) => (
             <StaggerItem key={ministry.title}>
               <div className="card-church h-full">
                 <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
@@ -44,6 +45,30 @@ export function Ministries() {
                 <a href={ministry.cta.href} className="btn-primary">
                   {ministry.cta.label}
                 </a>
+              </div>
+            </StaggerItem>
+          ))}
+        </StaggerContainer>
+
+        {/* Additional Ministries from JSON */}
+        <StaggerContainer className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+          {ministriesData.ministries.map((ministry) => (
+            <StaggerItem key={ministry.id}>
+              <div className="card-church h-full flex flex-col">
+                {ministry.image && (
+                  <div className="aspect-video w-full mb-4 rounded-lg overflow-hidden bg-muted">
+                    <img 
+                      src={ministry.image} 
+                      alt={ministry.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+                <h3 className="font-semibold text-lg mb-2">{ministry.name}</h3>
+                <p className="text-muted-foreground text-sm flex-grow">{ministry.description}</p>
+                {ministry.contact && (
+                  <p className="text-sm font-medium mt-4">Contact: {ministry.contact}</p>
+                )}
               </div>
             </StaggerItem>
           ))}
