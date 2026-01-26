@@ -1,8 +1,10 @@
 import { Youtube, Facebook } from "lucide-react";
 import churchLogo from "@/assets/church-logo.png";
+import siteConfig, { formatAddressLines } from "@/lib/siteConfig";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
+  const [streetLine, cityLine] = formatAddressLines();
 
   return (
     <footer className="py-12 border-t border-slate-800 bg-slate-900">
@@ -18,8 +20,8 @@ export function Footer() {
               </div>
             </div>
             <p className="text-sm text-slate-300 leading-relaxed">
-              3005 Emig Mill Road<br />
-              Dover, PA 17315
+              {streetLine}<br />
+              {cityLine}
             </p>
           </div>
 
@@ -27,9 +29,11 @@ export function Footer() {
           <div>
             <h4 className="font-semibold mb-4 text-white font-['Playfair_Display']">Sundays</h4>
             <div className="text-sm text-slate-300 space-y-1">
-              <p>8:00 AM Traditional</p>
-              <p>9:15 AM Sunday School</p>
-              <p>10:30 AM Contemporary</p>
+              {siteConfig.serviceTimes.map((service) => (
+                <p key={`${service.name}-${service.time}`}>
+                  {service.time} {service.name}
+                </p>
+              ))}
             </div>
           </div>
 
@@ -48,12 +52,22 @@ export function Footer() {
           <div>
             <h4 className="font-semibold mb-4 text-white font-['Playfair_Display']">Contact</h4>
             <div className="text-sm text-slate-300 space-y-2 mb-4">
-              <a href="tel:717-764-0252" className="block hover:text-white transition-colors">717-764-0252</a>
-              <a href="mailto:newcreation25@comcast.net" className="block hover:text-white transition-colors break-all">newcreation25@comcast.net</a>
+              <a
+                href={`tel:${siteConfig.church.contact.phone}`}
+                className="block hover:text-white transition-colors"
+              >
+                {siteConfig.church.contact.phone}
+              </a>
+              <a
+                href={`mailto:${siteConfig.church.contact.email}`}
+                className="block hover:text-white transition-colors break-all"
+              >
+                {siteConfig.church.contact.email}
+              </a>
             </div>
             <div className="flex gap-2">
               <a 
-                href="https://www.youtube.com/@newcreationcommunitychurch4561" 
+                href={siteConfig.socialMedia.youtube}
                 target="_blank" 
                 rel="noreferrer"
                 className="w-9 h-9 rounded-lg border border-slate-700 flex items-center justify-center text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
@@ -62,7 +76,7 @@ export function Footer() {
                 <Youtube className="w-4 h-4" />
               </a>
               <a 
-                href="https://www.facebook.com/profile.php?id=100064726481440" 
+                href={siteConfig.socialMedia.facebook}
                 target="_blank" 
                 rel="noreferrer"
                 className="w-9 h-9 rounded-lg border border-slate-700 flex items-center justify-center text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"

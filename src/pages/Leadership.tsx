@@ -3,6 +3,7 @@ import { Footer } from "@/components/Footer";
 import { Mail, Phone } from "lucide-react";
 import { motion } from "framer-motion";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/animations/FadeIn";
+import siteConfig from "@/lib/siteConfig";
 
 interface StaffMember {
   id: string;
@@ -50,7 +51,7 @@ const staff: StaffMember[] = [
     role: "Office Administrator",
     bio: "Robert keeps our church running smoothly behind the scenes. He manages communications, scheduling, and administrative needs.",
     email: "office@newcreationumc.org",
-    phone: "717-764-0252",
+    phone: siteConfig.church.contact.phone,
   },
 ];
 
@@ -174,11 +175,11 @@ const Leadership = () => {
                 Have questions or want to connect with our team? We'd love to hear from you.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <a href="tel:717-764-0252" className="btn-primary">
+                <a href={`tel:${siteConfig.church.contact.phone}`} className="btn-primary">
                   <Phone className="w-4 h-4" />
                   Call Us
                 </a>
-                <a href="mailto:newcreation25@comcast.net" className="btn-secondary">
+                <a href={`mailto:${siteConfig.church.contact.email}`} className="btn-secondary">
                   <Mail className="w-4 h-4" />
                   Email Us
                 </a>

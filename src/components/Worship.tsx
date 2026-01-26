@@ -1,6 +1,6 @@
 import { Youtube, Facebook, ExternalLink, Music, Clock, Radio } from "lucide-react";
 import { FadeIn, StaggerContainer, StaggerItem } from "./animations/FadeIn";
-import siteConfig from "@/content/site-config.json";
+import siteConfig from "@/lib/siteConfig";
 
 export function Worship() {
   return (
@@ -25,18 +25,12 @@ export function Worship() {
               <h3 className="font-semibold text-lg">Sunday Service Times</h3>
             </div>
             <div className="grid sm:grid-cols-3 gap-4">
-              <div className="text-center p-4 bg-secondary/50 rounded-lg">
-                <p className="font-semibold text-lg">8:00 AM</p>
-                <p className="text-sm text-muted-foreground">Traditional Service</p>
-              </div>
-              <div className="text-center p-4 bg-secondary/50 rounded-lg">
-                <p className="font-semibold text-lg">9:15 AM</p>
-                <p className="text-sm text-muted-foreground">Sunday School</p>
-              </div>
-              <div className="text-center p-4 bg-secondary/50 rounded-lg">
-                <p className="font-semibold text-lg">10:30 AM</p>
-                <p className="text-sm text-muted-foreground">Contemporary Service</p>
-              </div>
+              {siteConfig.serviceTimes.map((service) => (
+                <div key={`${service.name}-${service.time}`} className="text-center p-4 bg-secondary/50 rounded-lg">
+                  <p className="font-semibold text-lg">{service.time}</p>
+                  <p className="text-sm text-muted-foreground">{service.name}</p>
+                </div>
+              ))}
             </div>
           </div>
         </FadeIn>

@@ -1,7 +1,10 @@
 import { Phone, Mail, MapPin, Clock } from "lucide-react";
 import { FadeIn, StaggerContainer, StaggerItem } from "./animations/FadeIn";
+import siteConfig, { formatAddressLines } from "@/lib/siteConfig";
 
 export function Contact() {
+  const [streetLine, cityLine] = formatAddressLines();
+
   return (
     <section id="contact" className="section-church border-t border-border">
       <div className="container max-w-5xl mx-auto px-5">
@@ -19,12 +22,12 @@ export function Contact() {
           <StaggerContainer className="space-y-4">
             <StaggerItem>
               <a 
-                href="tel:717-764-0252" 
+                href={`tel:${siteConfig.church.contact.phone}`} 
                 className="flex items-center gap-4 p-4 rounded-lg border border-border hover:bg-secondary transition-colors"
               >
                 <Phone className="w-5 h-5 text-primary" />
                 <div>
-                  <p className="font-medium">717-764-0252</p>
+                  <p className="font-medium">{siteConfig.church.contact.phone}</p>
                   <p className="text-sm text-muted-foreground">Call the church office</p>
                 </div>
               </a>
@@ -32,12 +35,12 @@ export function Contact() {
             
             <StaggerItem>
               <a 
-                href="mailto:newcreation25@comcast.net" 
+                href={`mailto:${siteConfig.church.contact.email}`} 
                 className="flex items-center gap-4 p-4 rounded-lg border border-border hover:bg-secondary transition-colors"
               >
                 <Mail className="w-5 h-5 text-primary" />
                 <div>
-                  <p className="font-medium break-all">newcreation25@comcast.net</p>
+                  <p className="font-medium break-all">{siteConfig.church.contact.email}</p>
                   <p className="text-sm text-muted-foreground">Send us an email</p>
                 </div>
               </a>
@@ -47,8 +50,8 @@ export function Contact() {
               <div className="flex items-start gap-4 p-4 rounded-lg border border-border">
                 <MapPin className="w-5 h-5 text-primary mt-0.5" />
                 <div>
-                  <p className="font-medium">3005 Emig Mill Road</p>
-                  <p className="text-muted-foreground">Dover, PA 17315</p>
+                  <p className="font-medium">{streetLine}</p>
+                  <p className="text-muted-foreground">{cityLine}</p>
                 </div>
               </div>
             </StaggerItem>
@@ -62,18 +65,12 @@ export function Contact() {
                 <h3 className="font-semibold text-lg">Service Times</h3>
               </div>
               <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Traditional Service</span>
-                  <span className="font-medium">8:00 AM</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Sunday School</span>
-                  <span className="font-medium">9:15 AM</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Contemporary Service</span>
-                  <span className="font-medium">10:30 AM</span>
-                </div>
+                {siteConfig.serviceTimes.map((service) => (
+                  <div key={`${service.name}-${service.time}`} className="flex justify-between">
+                    <span className="text-muted-foreground">{service.name}</span>
+                    <span className="font-medium">{service.time}</span>
+                  </div>
+                ))}
               </div>
             </div>
           </FadeIn>

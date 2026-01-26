@@ -1,8 +1,13 @@
 import { MapPin, Clock, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import heroBg from "@/assets/hero-church-sunset.webp";
+import siteConfig, { formatFullAddress } from "@/lib/siteConfig";
 
 export function Hero() {
+  const featuredServices = siteConfig.serviceTimes.filter((service) =>
+    service.name.toLowerCase().includes("service"),
+  );
+
   return (
     <section className="relative min-h-[85vh] flex items-center">
       {/* Background image - vibrant and visible */}
@@ -44,14 +49,14 @@ export function Hero() {
             transition={{ duration: 0.6, delay: 0.1, ease: [0.25, 0.1, 0.25, 1] }}
             className="flex flex-col sm:flex-row gap-4 sm:gap-8 mb-8"
           >
-            <div className="flex items-center gap-2 text-white drop-shadow-md">
-              <Clock className="w-4 h-4 text-white" />
-              <span><strong>8:00 AM</strong> Traditional</span>
-            </div>
-            <div className="flex items-center gap-2 text-white drop-shadow-md">
-              <Clock className="w-4 h-4 text-white" />
-              <span><strong>10:30 AM</strong> Contemporary</span>
-            </div>
+            {featuredServices.map((service) => (
+              <div key={`${service.name}-${service.time}`} className="flex items-center gap-2 text-white drop-shadow-md">
+                <Clock className="w-4 h-4 text-white" />
+                <span>
+                  <strong>{service.time}</strong> {service.name.replace(" Service", "")}
+                </span>
+              </div>
+            ))}
           </motion.div>
 
           {/* Primary CTA with scrim */}
@@ -78,7 +83,7 @@ export function Hero() {
             className="flex items-start gap-2 text-sm text-white/90 drop-shadow-md"
           >
             <MapPin className="w-4 h-4 mt-0.5 shrink-0" />
-            <span>3005 Emig Mill Road, Dover PA 17315</span>
+            <span>{formatFullAddress()}</span>
           </motion.div>
         </div>
       </div>
