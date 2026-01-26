@@ -9,7 +9,7 @@
         var redirect = '/NC-site-refresh-studio/';
         var fullPath = window.location.pathname + window.location.search + window.location.hash;
         if (fullPath && fullPath !== redirect) {
-          redirect += '#/' + fullPath.replace(/^\/,'');
+          redirect += '#/' + fullPath.replace(/^\//, '');
         }
         window.location.replace(redirect);
       })();
