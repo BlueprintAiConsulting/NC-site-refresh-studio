@@ -67,8 +67,13 @@ export function RoomReservations() {
                 Receive confirmation and any applicable guidelines for your event.
               </li>
             </ol>
-            <a href="#contact" className="btn-primary">
-              Request a Room
+            <a
+              href="https://forms.gle/your-form-link"
+              className="btn-primary"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Room Request Form
             </a>
           </div>
         </FadeIn>
