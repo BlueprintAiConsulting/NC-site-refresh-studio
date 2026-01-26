@@ -23,7 +23,7 @@ const App = () => (
       <AuthProvider>
         <Toaster />
         <Sonner />
-        <BrowserRouter>
+        <BrowserRouter basename="/NC-site-refresh-studio">
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/leadership" element={<Leadership />} />
