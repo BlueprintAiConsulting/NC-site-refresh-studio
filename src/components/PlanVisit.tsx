@@ -3,12 +3,18 @@ import { useState, FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { FadeIn } from "./animations/FadeIn";
+import siteConfig, {
+  formatAddressLines,
+  getGoogleMapsDirectionsUrl,
+  getGoogleMapsEmbedUrl,
+} from "@/lib/siteConfig";
 
 export function PlanVisit() {
   const [formState, setFormState] = useState({ name: "", email: "", message: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const { toast } = useToast();
+  const [streetLine, cityLine] = formatAddressLines();
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -45,7 +51,7 @@ export function PlanVisit() {
       console.error("Error submitting form:", error);
       toast({
         title: "Something went wrong",
-        description: "Please try again or contact us directly at 717-764-0252.",
+        description: `Please try again or contact us directly at ${siteConfig.church.contact.phone}.`,
         variant: "destructive",
       });
     } finally {
@@ -74,8 +80,8 @@ export function PlanVisit() {
                 <div className="flex items-start gap-3 mb-6">
                   <MapPin className="w-5 h-5 text-primary mt-0.5 shrink-0" />
                   <div>
-                    <p className="font-medium">3005 Emig Mill Road</p>
-                    <p className="text-muted-foreground">Dover, PA 17315</p>
+                    <p className="font-medium">{streetLine}</p>
+                    <p className="text-muted-foreground">{cityLine}</p>
                   </div>
                 </div>
 
@@ -85,12 +91,12 @@ export function PlanVisit() {
                     className="w-full h-full border-0"
                     loading="lazy"
                     referrerPolicy="no-referrer-when-downgrade"
-                    src="https://www.google.com/maps?q=3005%20Emig%20Mill%20Road%20Dover%20PA%2017315&output=embed"
+                    src={getGoogleMapsEmbedUrl()}
                   />
                 </div>
 
                 <a 
-                  href="https://www.google.com/maps/dir/?api=1&destination=3005+Emig+Mill+Road+Dover+PA+17315" 
+                  href={getGoogleMapsDirectionsUrl()} 
                   target="_blank" 
                   rel="noreferrer"
                   className="btn-secondary w-full justify-center"
@@ -104,18 +110,18 @@ export function PlanVisit() {
                 <h3 className="font-semibold text-lg mb-4">Contact Us</h3>
                 <div className="space-y-3">
                   <a 
-                    href="tel:717-764-0252" 
+                    href={`tel:${siteConfig.church.contact.phone}`} 
                     className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-secondary transition-colors"
                   >
                     <Phone className="w-4 h-4 text-primary" />
-                    <span className="font-medium">717-764-0252</span>
+                    <span className="font-medium">{siteConfig.church.contact.phone}</span>
                   </a>
                   <a 
-                    href="mailto:newcreation25@comcast.net" 
+                    href={`mailto:${siteConfig.church.contact.email}`} 
                     className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-secondary transition-colors"
                   >
                     <Mail className="w-4 h-4 text-primary" />
-                    <span className="font-medium break-all">newcreation25@comcast.net</span>
+                    <span className="font-medium break-all">{siteConfig.church.contact.email}</span>
                   </a>
                 </div>
               </div>
