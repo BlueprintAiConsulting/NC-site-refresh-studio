@@ -18,9 +18,9 @@ interface StaffMember {
 const pastors: StaffMember[] = [
   {
     id: "1",
-    name: "Pastor John Smith",
+    name: "Pastor Blanca Baker",
     role: "Senior Pastor",
-    bio: "Pastor John has served New Creation since 2015. He is passionate about preaching the Gospel and helping people grow in their faith journey. He holds a Master of Divinity from Wesley Theological Seminary.",
+    bio: "",
     email: "pastor@newcreationumc.org",
   },
   {
