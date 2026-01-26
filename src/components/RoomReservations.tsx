@@ -73,7 +73,7 @@ export function RoomReservations() {
               target="_blank"
               rel="noreferrer"
             >
-              Room Request Form
+              Request a Room
             </a>
           </div>
         </FadeIn>
