@@ -1,8 +1,9 @@
+import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
@@ -17,6 +18,21 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+const ScrollToHash = () => {
+  const { hash } = useLocation();
+
+  useEffect(() => {
+    if (!hash) return;
+    const id = hash.replace("#", "");
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [hash]);
+
+  return null;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -24,6 +40,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter basename="/NC-site-refresh-studio">
+          <ScrollToHash />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/leadership" element={<Leadership />} />
