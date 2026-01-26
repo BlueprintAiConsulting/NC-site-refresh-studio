@@ -1,23 +1,5 @@
-import { Building, Calendar, Users, ClipboardCheck } from "lucide-react";
-import { FadeIn, StaggerContainer, StaggerItem } from "./animations/FadeIn";
-
-const rooms = [
-  {
-    name: "Fellowship Hall",
-    capacity: "Up to 150 guests",
-    features: "Full kitchen access, tables & chairs, AV equipment",
-  },
-  {
-    name: "Conference Room",
-    capacity: "Up to 20 guests",
-    features: "Projector, whiteboard, conference table",
-  },
-  {
-    name: "Classrooms",
-    capacity: "Various sizes",
-    features: "Perfect for small group meetings and classes",
-  },
-];
+import { ClipboardCheck } from "lucide-react";
+import { FadeIn } from "./animations/FadeIn";
 
 export function RoomReservations() {
   return (
@@ -32,41 +14,15 @@ export function RoomReservations() {
           </p>
         </FadeIn>
 
-        <StaggerContainer className="grid sm:grid-cols-3 gap-6 mb-8">
-          {rooms.map((room) => (
-            <StaggerItem key={room.name}>
-              <div className="card-church h-full">
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-                  <Building className="w-5 h-5 text-primary" />
-                </div>
-                <h3 className="font-semibold text-lg mb-2">{room.name}</h3>
-                <p className="text-sm font-medium text-primary mb-2">{room.capacity}</p>
-                <p className="text-muted-foreground text-sm">{room.features}</p>
-              </div>
-            </StaggerItem>
-          ))}
-        </StaggerContainer>
-
         <FadeIn delay={0.3}>
           <div className="card-church max-w-2xl">
             <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
               <ClipboardCheck className="w-5 h-5 text-primary" />
               How to Reserve
             </h3>
-            <ol className="space-y-3 text-sm text-muted-foreground mb-6">
-              <li className="flex gap-3">
-                <span className="font-semibold text-foreground">1.</span>
-                Contact the church office to check availability for your desired date and time.
-              </li>
-              <li className="flex gap-3">
-                <span className="font-semibold text-foreground">2.</span>
-                Complete the facility request form (available at the office or online).
-              </li>
-              <li className="flex gap-3">
-                <span className="font-semibold text-foreground">3.</span>
-                Receive confirmation and any applicable guidelines for your event.
-              </li>
-            </ol>
+            <p className="text-sm text-muted-foreground mb-6">
+              Use the form below to submit a room request. We’ll follow up with availability and next steps.
+            </p>
             <a
               href="https://forms.gle/your-form-link"
               className="btn-primary"
