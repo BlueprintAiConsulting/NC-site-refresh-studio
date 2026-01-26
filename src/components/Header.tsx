@@ -22,6 +22,7 @@ const navItems: NavItem[] = [
     children: [
       { href: "#about", label: "Our Story", isAnchor: true },
       { href: "/leadership", label: "Leadership", isAnchor: false },
+      { href: "/ministries", label: "Ministries", isAnchor: false },
     ],
   },
   {

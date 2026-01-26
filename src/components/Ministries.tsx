@@ -13,8 +13,15 @@ const featuredMinistries = [
   {
     icon: Users,
     title: "Men's Alliance",
-    description: "Brotherhood, growth, and accountability. Outdoor workout followed by devotional.",
-    detail: "Tuesdays at 6:30 PM",
+    description: "Brotherhood, growth, and accountability. Outdoor workout followed by devotional. Rain or shine.",
+    detail: "Tuesdays 6:30–7:30 PM",
+    cta: { label: "Join Us", href: "#contact" },
+  },
+  {
+    icon: Users,
+    title: "Women's Alliance",
+    description: "Fellowship, faith, and encouragement for women of all ages.",
+    detail: "Meeting times to be announced",
     cta: { label: "Join Us", href: "#contact" },
   },
 ];

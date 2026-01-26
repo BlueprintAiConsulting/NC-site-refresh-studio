@@ -34,5 +34,9 @@
     "enabled": false,
     "message": "",
     "type": "info"
+  },
+  "socialMedia": {
+    "facebook": "https://www.facebook.com/profile.php?id=100064726481440",
+    "youtube": "https://www.youtube.com/@newcreationcommunitychurch4561"
   }
 }

@@ -14,6 +14,7 @@ import { RoomReservations } from "@/components/RoomReservations";
 import { Contact } from "@/components/Contact";
 import { Footer } from "@/components/Footer";
 import { EmergencyAlert } from "@/components/EmergencyAlert";
+import { SocialMediaSection } from "@/components/sections/SocialMediaSection";
 
 const Index = () => {
   return (
@@ -35,6 +36,7 @@ const Index = () => {
         <Give />
         <PhotoGallery />
         <RoomReservations />
+        <SocialMediaSection />
         <Contact />
       </main>
       <Footer />
