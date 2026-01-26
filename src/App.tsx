@@ -8,9 +8,11 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Leadership from "./pages/Leadership";
 import MinistriesPage from "./pages/MinistriesPage";
+import NewslettersPage from "./pages/NewslettersPage";
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminPhotos from "./pages/admin/AdminPhotos";
+import AdminNewsletters from "./pages/admin/AdminNewsletters";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +28,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/leadership" element={<Leadership />} />
             <Route path="/ministries" element={<MinistriesPage />} />
+            <Route path="/newsletters" element={<NewslettersPage />} />
             
             {/* Admin Routes */}
             <Route path="/admin/login" element={<AdminLogin />} />
@@ -45,8 +48,16 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/admin/newsletters"
+              element={
+                <ProtectedRoute>
+                  <AdminNewsletters />
+                </ProtectedRoute>
+              }
+            />
             
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

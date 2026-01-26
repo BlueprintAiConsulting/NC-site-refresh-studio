@@ -58,7 +58,7 @@ const navItems: NavItem[] = [
     ],
   },
   { href: "#give", label: "Give", isAnchor: true },
-  
+  { href: "/newsletters", label: "Newsletters", isAnchor: false },
   { href: "#room-reservations", label: "Rooms", isAnchor: true },
   
   { href: "/admin/login", label: "Admin", isAnchor: false },

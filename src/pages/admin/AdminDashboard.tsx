@@ -26,6 +26,13 @@ export default function AdminDashboard() {
       color: 'bg-blue-500/10 text-blue-600',
     },
     {
+      title: 'Newsletters',
+      description: 'Upload and manage newsletters',
+      icon: FileText,
+      href: '/admin/newsletters',
+      color: 'bg-indigo-500/10 text-indigo-600',
+    },
+    {
       title: 'Events',
       description: 'Create and manage church events',
       icon: Calendar,

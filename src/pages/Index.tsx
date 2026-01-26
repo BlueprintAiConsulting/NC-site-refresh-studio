@@ -9,6 +9,7 @@ import { Events } from "@/components/Events";
 import { PlanVisit } from "@/components/PlanVisit";
 import { Ministries } from "@/components/Ministries";
 import { Give } from "@/components/Give";
+import { Newsletter } from "@/components/Newsletter";
 import { PhotoGallery } from "@/components/PhotoGallery";
 import { RoomReservations } from "@/components/RoomReservations";
 import { Contact } from "@/components/Contact";
@@ -34,6 +35,7 @@ const Index = () => {
         <PlanVisit />
         <Ministries />
         <Give />
+        {/* <Newsletter /> */}
         <PhotoGallery />
         <RoomReservations />
         <SocialMediaSection />
