@@ -21,7 +21,7 @@ const pastors: StaffMember[] = [
     name: "Pastor Blanca Baker",
     role: "Senior Pastor",
     bio: "",
-    email: "pastor@newcreationumc.org",
+    email: "bbaker@susumc.org",
   },
 ];
 
