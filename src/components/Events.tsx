@@ -16,6 +16,8 @@ interface Event {
   is_recurring: boolean;
   recurring_pattern: string | null;
   is_featured: boolean;
+  image_url?: string | null;
+  image_path?: string | null;
 }
 
 export function Events() {
@@ -177,6 +179,15 @@ export function Events() {
                       key={event.id}
                       className="card-church bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20 hover:border-primary/40 transition-colors"
                     >
+                      {event.image_url && (
+                        <div className="mb-4 overflow-hidden rounded-lg border border-border/60 bg-muted">
+                          <img
+                            src={event.image_url}
+                            alt={event.title}
+                            className="h-40 w-full object-cover"
+                          />
+                        </div>
+                      )}
                       <div className="flex items-center gap-2 mb-3">
                         <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
                         <span className="text-xs font-medium text-primary uppercase tracking-wider">
@@ -218,6 +229,17 @@ export function Events() {
                 {regularEvents.map((event) => (
                   <StaggerItem key={event.id}>
                     <article className="card-church flex flex-col sm:flex-row sm:items-center gap-4 hover:border-primary/20 transition-colors">
+                      {event.image_url && (
+                        <div className="shrink-0 w-full sm:w-28">
+                          <div className="aspect-[4/3] w-full overflow-hidden rounded-lg border border-border/60 bg-muted">
+                            <img
+                              src={event.image_url}
+                              alt={event.title}
+                              className="h-full w-full object-cover"
+                            />
+                          </div>
+                        </div>
+                      )}
                       {/* Date badge */}
                       <div className="shrink-0 flex items-center gap-3 sm:w-56">
                         <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">

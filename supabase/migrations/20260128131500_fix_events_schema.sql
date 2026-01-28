@@ -9,6 +9,8 @@ CREATE TABLE IF NOT EXISTS public.events (
     start_time TIME NOT NULL,
     end_time TIME,
     location TEXT,
+  image_url TEXT,
+  image_path TEXT,
     is_recurring BOOLEAN DEFAULT false,
     recurring_pattern TEXT,
     is_featured BOOLEAN DEFAULT false,

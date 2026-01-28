@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
@@ -12,7 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Calendar, Clock, MapPin, Plus, Pencil, Trash2, ArrowLeft, Star, Loader2 } from 'lucide-react';
+import { uploadPhoto } from '@/lib/storage';
+import { Calendar, Clock, MapPin, Plus, Pencil, Trash2, ArrowLeft, Star, Loader2, Image as ImageIcon } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 
 interface EventRecord {
@@ -26,6 +27,8 @@ interface EventRecord {
   is_recurring: boolean;
   recurring_pattern: string | null;
   is_featured: boolean;
+  image_url?: string | null;
+  image_path?: string | null;
 }
 
 interface EventFormState {
@@ -38,6 +41,8 @@ interface EventFormState {
   isRecurring: boolean;
   recurringPattern: string;
   isFeatured: boolean;
+  imageUrl: string;
+  imagePath: string;
 }
 
 const defaultFormState: EventFormState = {
@@ -50,6 +55,8 @@ const defaultFormState: EventFormState = {
   isRecurring: false,
   recurringPattern: '',
   isFeatured: false,
+  imageUrl: '',
+  imagePath: '',
 };
 
 export default function AdminEvents() {
@@ -58,8 +65,10 @@ export default function AdminEvents() {
   const [events, setEvents] = useState<EventRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [formState, setFormState] = useState<EventFormState>(defaultFormState);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     void fetchEvents();
@@ -90,6 +99,9 @@ export default function AdminEvents() {
   const resetForm = () => {
     setFormState(defaultFormState);
     setEditingId(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -125,14 +137,16 @@ export default function AdminEvents() {
       is_recurring: formState.isRecurring,
       recurring_pattern: formState.isRecurring ? (formState.recurringPattern || null) : null,
       is_featured: formState.isFeatured,
+      image_url: formState.imageUrl || null,
+      image_path: formState.imagePath || null,
     };
 
     const { error } = editingId
-      ? await supabase.from('events').update(payload).eq('id', editingId)
+      ? await supabase.from('events').update(payload as any).eq('id', editingId)
       : await supabase.from('events').insert({
           ...payload,
           created_by: user?.id ?? null,
-        });
+        } as any);
 
     if (error) {
       console.error('Event save error:', error);
@@ -169,7 +183,46 @@ export default function AdminEvents() {
       isRecurring: event.is_recurring,
       recurringPattern: event.recurring_pattern ?? '',
       isFeatured: event.is_featured,
+      imageUrl: event.image_url ?? '',
+      imagePath: event.image_path ?? '',
     });
+  };
+
+  const handleImageUpload = async (file?: File) => {
+    if (!file) return;
+
+    if (!isAdmin) {
+      toast({
+        title: 'Admin access required',
+        description: 'Your account does not have permission to upload event images.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setUploadingImage(true);
+
+    try {
+      const { url, path } = await uploadPhoto(file, 'events');
+      setFormState((prev) => ({
+        ...prev,
+        imageUrl: url,
+        imagePath: path,
+      }));
+      toast({
+        title: 'Image uploaded',
+        description: 'The event image is ready to save with this event.',
+      });
+    } catch (error: any) {
+      console.error('Event image upload error:', error);
+      toast({
+        title: 'Unable to upload image',
+        description: error?.message ?? 'Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setUploadingImage(false);
+    }
   };
 
   const handleDelete = async (id: string) => {
@@ -313,6 +366,67 @@ export default function AdminEvents() {
                     </div>
                   </div>
 
+                  <div className="space-y-2">
+                    <Label htmlFor="eventImage">Event Image</Label>
+                    <div className="flex flex-col gap-3">
+                      {formState.imageUrl ? (
+                        <div className="flex items-center gap-4">
+                          <div className="w-20 h-20 rounded-lg overflow-hidden border border-border bg-muted">
+                            <img
+                              src={formState.imageUrl}
+                              alt={`${formState.title || 'Event'} image`}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => {
+                              setFormState((prev) => ({ ...prev, imageUrl: '', imagePath: '' }));
+                              if (fileInputRef.current) {
+                                fileInputRef.current.value = '';
+                              }
+                            }}
+                          >
+                            Remove image
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-3">
+                          <Input
+                            id="eventImage"
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => handleImageUpload(e.target.files?.[0])}
+                            ref={fileInputRef}
+                            disabled={uploadingImage}
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={uploadingImage}
+                          >
+                            {uploadingImage ? (
+                              <>
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                Uploading
+                              </>
+                            ) : (
+                              <>
+                                <ImageIcon className="w-4 h-4 mr-2" />
+                                Upload
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      )}
+                      <p className="text-xs text-muted-foreground">
+                        Upload an image to show with this event.
+                      </p>
+                    </div>
+                  </div>
+
                   <div className="flex flex-wrap gap-6">
                     <div className="flex items-center gap-2">
                       <Switch
@@ -403,7 +517,7 @@ export default function AdminEvents() {
                     {events.map((event) => (
                       <div key={event.id} className="border rounded-lg p-4 bg-background">
                         <div className="flex items-start justify-between gap-3">
-                          <div className="space-y-1">
+                          <div className="space-y-1 flex-1">
                             <div className="flex items-center gap-2">
                               <h3 className="font-semibold text-lg">{event.title}</h3>
                               {event.is_featured && (
@@ -434,6 +548,15 @@ export default function AdminEvents() {
                               <p className="text-sm text-muted-foreground mt-2">{event.description}</p>
                             )}
                           </div>
+                          {event.image_url && (
+                            <div className="w-20 h-20 rounded-lg overflow-hidden border border-border bg-muted shrink-0">
+                              <img
+                                src={event.image_url}
+                                alt={`${event.title} image`}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          )}
                           <div className="flex gap-2">
                             <Button size="icon" variant="outline" onClick={() => startEdit(event)}>
                               <Pencil className="w-4 h-4" />
