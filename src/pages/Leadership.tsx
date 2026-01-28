@@ -4,6 +4,7 @@ import { Mail, Phone } from "lucide-react";
 import { motion } from "framer-motion";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/animations/FadeIn";
 import siteConfig from "@/lib/siteConfig";
+import { useGalleryImages } from "@/hooks/useGalleryImages";
 
 interface StaffMember {
   id: string;
@@ -12,7 +13,8 @@ interface StaffMember {
   bio: string;
   email?: string;
   phone?: string;
-  image?: string;
+  imageUrl?: string;
+  imageCategory?: string;
 }
 
 const pastors: StaffMember[] = [
@@ -25,37 +27,31 @@ const pastors: StaffMember[] = [
   },
 ];
 
-const staff: StaffMember[] = [
-  {
-    id: "6",
-    name: "Marsha Snyder",
-    role: "Pianist (8:00 AM) & Worship Leader (10:30 AM)",
-    bio: "Marsha serves as our 8:00 AM pianist and leads worship for the 10:30 AM service.",
-  },
-  {
-    id: "7",
-    name: "Mike Krall",
-    role: "Custodian",
-    bio: "Mike faithfully cares for our facilities and helps keep our church welcoming and well-maintained.",
-  },
-  {
-    id: "8",
-    name: "ALL NCCC Family",
-    role: "Ministers of the Gospel",
-    bio: "We believe every member is called to share the love of Christ through service and witness.",
-  },
-];
-
 function StaffCard({ member }: { member: StaffMember }) {
+  const initials = member.name
+    .split(' ')
+    .map((n) => n[0])
+    .join('');
+
   return (
     <article className="card-church flex flex-col md:flex-row gap-6">
       {/* Avatar placeholder */}
       <div className="shrink-0">
-        <div className="w-24 h-24 md:w-32 md:h-32 rounded-xl bg-secondary flex items-center justify-center">
-          <span className="text-3xl md:text-4xl font-semibold text-muted-foreground">
-            {member.name.split(' ').map(n => n[0]).join('')}
-          </span>
-        </div>
+        {member.imageUrl ? (
+          <div className="w-24 h-24 md:w-32 md:h-32 rounded-full overflow-hidden border border-border bg-secondary">
+            <img
+              src={member.imageUrl}
+              alt={member.name}
+              className="w-full h-full object-cover"
+            />
+          </div>
+        ) : (
+          <div className="w-24 h-24 md:w-32 md:h-32 rounded-full bg-secondary flex items-center justify-center">
+            <span className="text-3xl md:text-4xl font-semibold text-muted-foreground">
+              {initials}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Details */}
@@ -93,6 +89,37 @@ function StaffCard({ member }: { member: StaffMember }) {
 }
 
 const Leadership = () => {
+  const { data: marshaImages } = useGalleryImages("staff-marsha-snyder");
+  const { data: mikeImages } = useGalleryImages("staff-mike-krall");
+  const { data: ministersImages } = useGalleryImages("staff-ministers");
+
+  const staff: StaffMember[] = [
+    {
+      id: "6",
+      name: "Marsha Snyder",
+      role: "Pianist (8:00 AM) & Worship Leader (10:30 AM)",
+      bio: "Marsha serves as our 8:00 AM pianist and leads worship for the 10:30 AM service.",
+      imageCategory: "staff-marsha-snyder",
+      imageUrl: marshaImages?.[0]?.src,
+    },
+    {
+      id: "7",
+      name: "Mike Krall",
+      role: "Custodian",
+      bio: "Mike faithfully cares for our facilities and helps keep our church welcoming and well-maintained.",
+      imageCategory: "staff-mike-krall",
+      imageUrl: mikeImages?.[0]?.src,
+    },
+    {
+      id: "8",
+      name: "ALL NCCC Family",
+      role: "Ministers of the Gospel",
+      bio: "We believe every member is called to share the love of Christ through service and witness.",
+      imageCategory: "staff-ministers",
+      imageUrl: ministersImages?.[0]?.src,
+    },
+  ];
+
   return (
     <>
       <a className="skip-link" href="#main">Skip to content</a>

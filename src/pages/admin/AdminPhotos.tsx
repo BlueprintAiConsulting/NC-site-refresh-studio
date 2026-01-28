@@ -554,6 +554,9 @@ export default function AdminPhotos() {
                         <SelectItem value="mission">Mission Bubble</SelectItem>
                         <SelectItem value="vision">Vision Bubble</SelectItem>
                         <SelectItem value="values">Values Bubble</SelectItem>
+                        <SelectItem value="staff-marsha-snyder">Staff: Marsha Snyder</SelectItem>
+                        <SelectItem value="staff-mike-krall">Staff: Mike Krall</SelectItem>
+                        <SelectItem value="staff-ministers">Staff: Ministers of the Gospel</SelectItem>
                         <SelectItem value="worship-bubble-1">Worship Bubble 1</SelectItem>
                         <SelectItem value="worship-bubble-2">Worship Bubble 2</SelectItem>
                         <SelectItem value="worship-bubble-3">Worship Bubble 3</SelectItem>
@@ -757,6 +760,9 @@ export default function AdminPhotos() {
                           <SelectItem value="mission">Mission Bubble</SelectItem>
                           <SelectItem value="vision">Vision Bubble</SelectItem>
                           <SelectItem value="values">Values Bubble</SelectItem>
+                          <SelectItem value="staff-marsha-snyder">Staff: Marsha Snyder</SelectItem>
+                          <SelectItem value="staff-mike-krall">Staff: Mike Krall</SelectItem>
+                          <SelectItem value="staff-ministers">Staff: Ministers of the Gospel</SelectItem>
                           <SelectItem value="worship-bubble-1">Worship Bubble 1</SelectItem>
                           <SelectItem value="worship-bubble-2">Worship Bubble 2</SelectItem>
                           <SelectItem value="worship-bubble-3">Worship Bubble 3</SelectItem>
