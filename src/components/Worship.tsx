@@ -36,8 +36,20 @@ export function Worship() {
   ];
 
   return (
-    <section id="worship" className="section-church border-t border-border">
-      <div className="container max-w-5xl mx-auto px-5">
+    <section
+      id="worship"
+      className="section-church py-16 md:py-24 border-t border-border relative overflow-hidden"
+    >
+      <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+        <div className="absolute right-8 bottom-12 h-72 w-72 rounded-full overflow-hidden opacity-15">
+          <img src={bubbleImages[1]} alt="" className="h-full w-full object-cover" />
+        </div>
+        <div className="absolute -left-16 top-6 h-52 w-52 rounded-full overflow-hidden opacity-20">
+          <img src={bubbleImages[0]} alt="" className="h-full w-full object-cover" />
+        </div>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(228,0,43,0.08),transparent_45%),radial-gradient(circle_at_20%_80%,rgba(175,41,46,0.06),transparent_45%)]" />
+      </div>
+      <div className="container max-w-5xl mx-auto px-5 relative">
         <FadeIn>
           <h2 className="text-3xl md:text-4xl font-semibold mb-4">Worship</h2>
         </FadeIn>

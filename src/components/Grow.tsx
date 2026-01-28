@@ -38,8 +38,20 @@ const growOpportunities = [
 
 export function Grow() {
   return (
-    <section id="grow" className="section-church bg-secondary/50 border-t border-border">
-      <div className="container max-w-5xl mx-auto px-5">
+    <section
+      id="grow"
+      className="section-church py-16 md:py-24 bg-secondary/50 border-t border-border relative overflow-hidden"
+    >
+      <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+        <div className="absolute -right-12 top-8 h-60 w-60 rounded-full overflow-hidden opacity-20">
+          <img src={discipleshipImg} alt="" className="h-full w-full object-cover" />
+        </div>
+        <div className="absolute -left-20 bottom-6 h-72 w-72 rounded-full overflow-hidden opacity-15">
+          <img src={smallGroupsImg} alt="" className="h-full w-full object-cover" />
+        </div>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_85%_25%,rgba(228,0,43,0.08),transparent_45%),radial-gradient(circle_at_10%_75%,rgba(228,0,43,0.06),transparent_50%)]" />
+      </div>
+      <div className="container max-w-5xl mx-auto px-5 relative">
         <FadeIn>
           <h2 className="text-3xl md:text-4xl font-semibold mb-4">Grow</h2>
         </FadeIn>
