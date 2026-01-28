@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Menu, X, ChevronDown } from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import churchLogo from "@/assets/church-logo.png";
 import {
   DropdownMenu,
@@ -68,6 +68,7 @@ export function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const location = useLocation();
+  const navigate = useNavigate();
   const isHomePage = location.pathname === "/";
 
   const getAnchorTo = (href: string) => {
@@ -75,25 +76,65 @@ export function Header() {
     return isHomePage ? { hash } : { pathname: "/", hash };
   };
 
+  const handleAnchorNavigation = (href: string) => {
+    const hash = href.startsWith("#") ? href : `#${href}`;
+    const id = hash.replace("#", "");
+
+    if (isHomePage) {
+      const el = document.getElementById(id);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+      window.history.pushState(null, "", hash);
+    } else {
+      navigate({ pathname: "/", hash });
+    }
+  };
+
   const renderNavItem = (item: NavItem) => {
     if (item.children) {
+      const isExpanded = openDropdown === item.label;
       return (
-        <DropdownMenu key={item.label}>
-          <DropdownMenuTrigger className="link-nav flex items-center gap-1 outline-none text-white hover:text-white/80">
-            {item.label}
-            <ChevronDown className="w-3 h-3" />
+        <DropdownMenu
+          key={item.label}
+          open={isExpanded}
+          onOpenChange={(open) => setOpenDropdown(open ? item.label : null)}
+        >
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              className="link-nav flex items-center gap-1 outline-none text-white hover:text-white/80"
+              onMouseEnter={() => setOpenDropdown(item.label)}
+            >
+              {item.label}
+              <ChevronDown className="w-3 h-3" />
+            </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="bg-background border border-border shadow-lg z-[100]">
+          <DropdownMenuContent
+            align="start"
+            className="bg-background border border-border shadow-lg z-[100]"
+            onMouseLeave={() => setOpenDropdown(null)}
+          >
             {item.children.map((child) =>
               child.isAnchor ? (
-                <DropdownMenuItem key={child.href + child.label} asChild>
-                  <Link to={getAnchorTo(child.href)} className="cursor-pointer">
-                    {child.label}
-                  </Link>
+                <DropdownMenuItem
+                  key={child.href + child.label}
+                  className="cursor-pointer"
+                  onSelect={(event) => {
+                    event.preventDefault();
+                    setOpenDropdown(null);
+                    handleAnchorNavigation(child.href);
+                  }}
+                >
+                  {child.label}
                 </DropdownMenuItem>
               ) : (
                 <DropdownMenuItem key={child.href + child.label} asChild>
-                  <Link to={child.href} className="cursor-pointer">
+                  <Link
+                    to={child.href}
+                    className="cursor-pointer"
+                    onClick={() => setOpenDropdown(null)}
+                  >
                     {child.label}
                   </Link>
                 </DropdownMenuItem>
