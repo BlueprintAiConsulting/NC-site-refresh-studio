@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,6 +24,7 @@ import { useToast } from '@/hooks/use-toast';
 import { uploadPhotos } from '@/lib/storage';
 import { supabase } from '@/integrations/supabase/client';
 import Cropper from 'react-easy-crop';
+import ministriesData from '@/content/ministries.json';
 
 interface SelectedFile {
   file: File;
@@ -33,6 +34,14 @@ interface SelectedFile {
 }
 
 type CropArea = { width: number; height: number; x: number; y: number };
+
+interface GalleryImageRecord {
+  id: string;
+  src: string;
+  alt: string;
+  category: string;
+  created_at: string;
+}
 
 const cropAspectOptions = [
   { label: 'Free', value: 'free' },
@@ -48,11 +57,88 @@ export default function AdminPhotos() {
   const [category, setCategory] = useState('gallery');
   const [altTexts, setAltTexts] = useState<Record<number, string>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [cropIndex, setCropIndex] = useState<number | null>(null);
+  const [cropTarget, setCropTarget] = useState<
+    | { mode: 'new'; index: number }
+    | { mode: 'existing'; image: GalleryImageRecord; scope: 'gallery' | 'ministry' }
+    | null
+  >(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<CropArea | null>(null);
   const [cropAspect, setCropAspect] = useState<string>('1');
+  const [galleryImages, setGalleryImages] = useState<GalleryImageRecord[]>([]);
+  const [ministryImages, setMinistryImages] = useState<GalleryImageRecord[]>([]);
+  const [galleryCategory, setGalleryCategory] = useState('gallery');
+  const [ministryCategory, setMinistryCategory] = useState('education');
+  const [loadingGallery, setLoadingGallery] = useState(false);
+  const [loadingMinistry, setLoadingMinistry] = useState(false);
+
+  const ministryCategories = Array.from(
+    new Set(ministriesData.ministries.map((ministry) => ministry.category))
+  );
+
+  const getStoragePathFromUrl = (url: string) => {
+    try {
+      const { pathname } = new URL(url);
+      const marker = '/storage/v1/object/public/gallery/';
+      const index = pathname.indexOf(marker);
+      if (index === -1) return null;
+      return decodeURIComponent(pathname.substring(index + marker.length));
+    } catch {
+      return null;
+    }
+  };
+
+  const fetchImagesByCategory = async (targetCategory: string) => {
+    const { data, error } = await supabase
+      .from('gallery_images')
+      .select('*')
+      .eq('category', targetCategory)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return (data ?? []) as GalleryImageRecord[];
+  };
+
+  useEffect(() => {
+    const loadGallery = async () => {
+      setLoadingGallery(true);
+      try {
+        const data = await fetchImagesByCategory(galleryCategory);
+        setGalleryImages(data);
+      } catch (error) {
+        console.error('Gallery load error:', error);
+        toast({
+          title: 'Unable to load gallery images',
+          description: 'Please try again later.',
+          variant: 'destructive',
+        });
+      } finally {
+        setLoadingGallery(false);
+      }
+    };
+    void loadGallery();
+  }, [galleryCategory, toast]);
+
+  useEffect(() => {
+    const loadMinistry = async () => {
+      setLoadingMinistry(true);
+      try {
+        const data = await fetchImagesByCategory(ministryCategory);
+        setMinistryImages(data);
+      } catch (error) {
+        console.error('Ministry load error:', error);
+        toast({
+          title: 'Unable to load ministry images',
+          description: 'Please try again later.',
+          variant: 'destructive',
+        });
+      } finally {
+        setLoadingMinistry(false);
+      }
+    };
+    void loadMinistry();
+  }, [ministryCategory, toast]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -128,27 +214,55 @@ export default function AdminPhotos() {
   };
 
   const applyCrop = async () => {
-    if (cropIndex === null || !croppedAreaPixels) return;
-    const target = selectedFiles[cropIndex];
-    if (!target) return;
+    if (!cropTarget || !croppedAreaPixels) return;
 
     try {
-      const croppedFile = await getCroppedFile(target.previewUrl, croppedAreaPixels, target.file.name);
-      const croppedPreviewUrl = URL.createObjectURL(croppedFile);
-      setSelectedFiles((prev) => {
-        const next = [...prev];
-        const current = next[cropIndex];
-        if (current?.croppedPreviewUrl) {
-          URL.revokeObjectURL(current.croppedPreviewUrl);
+      if (cropTarget.mode === 'new') {
+        const target = selectedFiles[cropTarget.index];
+        if (!target) return;
+        const croppedFile = await getCroppedFile(target.previewUrl, croppedAreaPixels, target.file.name);
+        const croppedPreviewUrl = URL.createObjectURL(croppedFile);
+        setSelectedFiles((prev) => {
+          const next = [...prev];
+          const current = next[cropTarget.index];
+          if (current?.croppedPreviewUrl) {
+            URL.revokeObjectURL(current.croppedPreviewUrl);
+          }
+          next[cropTarget.index] = {
+            ...current,
+            croppedFile,
+            croppedPreviewUrl,
+          };
+          return next;
+        });
+      } else {
+        const image = cropTarget.image;
+        const path = getStoragePathFromUrl(image.src);
+        if (!path) throw new Error('Unable to locate storage path for image');
+        const croppedFile = await getCroppedFile(image.src, croppedAreaPixels, `cropped-${image.id}.jpg`);
+        const { error: uploadError } = await supabase.storage
+          .from('gallery')
+          .upload(path, croppedFile, { cacheControl: '3600', upsert: true });
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('gallery')
+          .getPublicUrl(path);
+
+        const { error: dbError } = await supabase
+          .from('gallery_images')
+          .update({ src: publicUrl })
+          .eq('id', image.id);
+        if (dbError) throw dbError;
+
+        if (cropTarget.scope === 'gallery') {
+          setGalleryImages((prev) => prev.map((item) => (item.id === image.id ? { ...item, src: publicUrl } : item)));
+        } else {
+          setMinistryImages((prev) => prev.map((item) => (item.id === image.id ? { ...item, src: publicUrl } : item)));
         }
-        next[cropIndex] = {
-          ...current,
-          croppedFile,
-          croppedPreviewUrl,
-        };
-        return next;
-      });
-      setCropIndex(null);
+      }
+
+      setCropTarget(null);
     } catch (error) {
       console.error('Crop error:', error);
       toast({
@@ -159,7 +273,8 @@ export default function AdminPhotos() {
     }
   };
 
-  const handleUpload = async () => {
+  const handleUpload = async (overrideCategory?: string) => {
+    const activeCategory = overrideCategory ?? category;
     if (selectedFiles.length === 0) {
       toast({
         title: 'No files selected',
@@ -175,14 +290,14 @@ export default function AdminPhotos() {
       // Upload to Supabase Storage
       const uploadResults = await uploadPhotos(
         selectedFiles.map((item) => item.croppedFile ?? item.file),
-        category
+        activeCategory
       );
 
       // Save to database
       const photoRecords = uploadResults.map((result, index) => ({
         src: result.url,
         alt: altTexts[index] || selectedFiles[index].file.name.replace(/\.[^/.]+$/, ''),
-        category: category,
+        category: activeCategory,
       }));
 
       const { error: dbError } = await supabase
@@ -216,6 +331,174 @@ export default function AdminPhotos() {
       });
     } finally {
       setUploading(false);
+    }
+  };
+
+  const renderUploadPanel = (targetCategory: string, title: string, description: string) => (
+    <Card>
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="space-y-2">
+          <Label htmlFor={`photos-${targetCategory}`}>Select Photos</Label>
+          <div className="flex gap-2">
+            <Input
+              id={`photos-${targetCategory}`}
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={handleFileSelect}
+              ref={fileInputRef}
+              className="flex-1"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              Browse
+            </Button>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Supported formats: JPG, PNG, WebP. Max 5MB per file.
+          </p>
+        </div>
+
+        {selectedFiles.length > 0 && (
+          <div className="space-y-3">
+            <Label>Selected Files ({selectedFiles.length})</Label>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {selectedFiles.map((item, index) => (
+                <div key={index} className="relative group">
+                  <div className="aspect-square rounded-lg border bg-muted overflow-hidden">
+                    <img
+                      src={item.croppedPreviewUrl ?? item.previewUrl}
+                      alt={item.file.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="mt-2 flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      type="button"
+                      onClick={() => {
+                        setCropTarget({ mode: 'new', index });
+                        setCrop({ x: 0, y: 0 });
+                        setZoom(1);
+                        setCroppedAreaPixels(null);
+                      }}
+                    >
+                      <Crop className="w-4 h-4 mr-1" />
+                      Crop
+                    </Button>
+                    {item.croppedFile && (
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="flex-1"
+                        type="button"
+                        onClick={() => {
+                          setSelectedFiles((prev) => {
+                            const next = [...prev];
+                            const current = next[index];
+                            if (current?.croppedPreviewUrl) {
+                              URL.revokeObjectURL(current.croppedPreviewUrl);
+                            }
+                            next[index] = {
+                              ...current,
+                              croppedFile: undefined,
+                              croppedPreviewUrl: undefined,
+                            };
+                            return next;
+                          });
+                        }}
+                      >
+                        Reset
+                      </Button>
+                    )}
+                  </div>
+                  <Button
+                    variant="destructive"
+                    size="icon"
+                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={() => removeFile(index)}
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                  <p className="text-xs text-muted-foreground mt-1 truncate">
+                    {item.file.name}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <Button
+          type="button"
+          onClick={() => handleUpload(targetCategory)}
+          disabled={uploading || selectedFiles.length === 0}
+          className="w-full"
+        >
+          {uploading ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Uploading...
+            </>
+          ) : (
+            <>
+              <Upload className="w-4 h-4 mr-2" />
+              Upload to {targetCategory}
+            </>
+          )}
+        </Button>
+      </CardContent>
+    </Card>
+  );
+
+  const handleDeleteImage = async (image: GalleryImageRecord, scope: 'gallery' | 'ministry') => {
+    const confirmDelete = window.confirm('Delete this image? This cannot be undone.');
+    if (!confirmDelete) return;
+
+    try {
+      const path = getStoragePathFromUrl(image.src);
+      if (path) {
+        const { error: storageError } = await supabase
+          .storage
+          .from('gallery')
+          .remove([path]);
+        if (storageError) throw storageError;
+      }
+
+      const { error: dbError } = await supabase
+        .from('gallery_images')
+        .delete()
+        .eq('id', image.id);
+
+      if (dbError) throw dbError;
+
+      toast({
+        title: 'Image deleted',
+        description: 'The image has been removed.',
+      });
+
+      if (scope === 'gallery') {
+        setGalleryImages((prev) => prev.filter((item) => item.id !== image.id));
+      } else {
+        setMinistryImages((prev) => prev.filter((item) => item.id !== image.id));
+      }
+    } catch (error) {
+      console.error('Delete error:', error);
+      toast({
+        title: 'Unable to delete image',
+        description: 'Please try again later.',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -324,8 +607,9 @@ export default function AdminPhotos() {
                                 variant="secondary"
                                 size="sm"
                                 className="flex-1"
+                                type="button"
                                 onClick={() => {
-                                  setCropIndex(index);
+                                  setCropTarget({ mode: 'new', index });
                                   setCrop({ x: 0, y: 0 });
                                   setZoom(1);
                                   setCroppedAreaPixels(null);
@@ -339,6 +623,49 @@ export default function AdminPhotos() {
                                   variant="outline"
                                   size="sm"
                                   className="flex-1"
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedFiles((prev) => {
+                                      const next = [...prev];
+                                      const current = next[index];
+                                      if (current?.croppedPreviewUrl) {
+                                        URL.revokeObjectURL(current.croppedPreviewUrl);
+                                      }
+                                      next[index] = {
+                                        ...current,
+                                        croppedFile: undefined,
+                                        croppedPreviewUrl: undefined,
+                                      };
+                                      return next;
+                                    });
+                                  }}
+                                >
+                                  Reset
+                                </Button>
+                              )}
+                            </div>
+                            <div className="mt-2 flex gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="flex-1"
+                                type="button"
+                                onClick={() => {
+                                  setCropTarget({ mode: 'new', index });
+                                  setCrop({ x: 0, y: 0 });
+                                  setZoom(1);
+                                  setCroppedAreaPixels(null);
+                                }}
+                              >
+                                <Crop className="w-4 h-4 mr-1" />
+                                Crop
+                              </Button>
+                              {item.croppedFile && (
+                                <Button
+                                  variant="secondary"
+                                  size="sm"
+                                  className="flex-1"
+                                  type="button"
                                   onClick={() => {
                                     setSelectedFiles((prev) => {
                                       const next = [...prev];
@@ -378,7 +705,7 @@ export default function AdminPhotos() {
 
                   {/* Upload Button */}
                   <Button
-                    onClick={handleUpload}
+                    onClick={() => handleUpload()}
                     disabled={uploading || selectedFiles.length === 0}
                     className="w-full"
                   >
@@ -408,12 +735,87 @@ export default function AdminPhotos() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-center py-12 text-muted-foreground">
-                    <ImageIcon className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                    <p>Gallery management coming soon</p>
-                    <p className="text-sm mt-2">
-                      Photos will be loaded from Supabase or assets folder
-                    </p>
+                  <div className="space-y-6">
+                    {renderUploadPanel(
+                      galleryCategory,
+                      `Upload to ${galleryCategory}`,
+                      'Add new images to the selected gallery category.'
+                    )}
+                    <div className="max-w-xs">
+                      <Label htmlFor="gallery-category">Category</Label>
+                      <Select value={galleryCategory} onValueChange={setGalleryCategory}>
+                        <SelectTrigger id="gallery-category">
+                          <SelectValue placeholder="Select category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="gallery">General Gallery</SelectItem>
+                          <SelectItem value="worship">Worship</SelectItem>
+                          <SelectItem value="community">Community</SelectItem>
+                          <SelectItem value="youth">Youth</SelectItem>
+                          <SelectItem value="outreach">Outreach</SelectItem>
+                          <SelectItem value="events">Events</SelectItem>
+                          <SelectItem value="mission">Mission Bubble</SelectItem>
+                          <SelectItem value="vision">Vision Bubble</SelectItem>
+                          <SelectItem value="values">Values Bubble</SelectItem>
+                          <SelectItem value="worship-bubble-1">Worship Bubble 1</SelectItem>
+                          <SelectItem value="worship-bubble-2">Worship Bubble 2</SelectItem>
+                          <SelectItem value="worship-bubble-3">Worship Bubble 3</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {loadingGallery ? (
+                      <div className="flex justify-center py-12">
+                        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                      </div>
+                    ) : galleryImages.length === 0 ? (
+                      <div className="text-center py-12 text-muted-foreground">
+                        <ImageIcon className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                        <p>No images in this category yet.</p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {galleryImages.map((image) => (
+                          <div key={image.id} className="relative group">
+                            <div className="aspect-square rounded-lg border bg-muted overflow-hidden">
+                              <img
+                                src={image.src}
+                                alt={image.alt}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <div className="mt-2 flex gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="flex-1"
+                                type="button"
+                                onClick={() => {
+                                  setCropTarget({ mode: 'existing', image, scope: 'gallery' });
+                                  setCrop({ x: 0, y: 0 });
+                                  setZoom(1);
+                                  setCroppedAreaPixels(null);
+                                }}
+                              >
+                                <Crop className="w-4 h-4 mr-1" />
+                                Crop
+                              </Button>
+                            </div>
+                            <Button
+                              variant="destructive"
+                              size="icon"
+                              className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={() => handleDeleteImage(image, 'gallery')}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                            <p className="text-xs text-muted-foreground mt-2 truncate">
+                              {image.alt || 'Gallery image'}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -429,12 +831,80 @@ export default function AdminPhotos() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-center py-12 text-muted-foreground">
-                    <ImageIcon className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                    <p>Ministry photo management coming soon</p>
-                    <p className="text-sm mt-2">
-                      Upload photos directly to ministries
-                    </p>
+                  <div className="space-y-6">
+                    {renderUploadPanel(
+                      ministryCategory,
+                      `Upload to ${ministryCategory}`,
+                      'Add new images for the selected ministry category.'
+                    )}
+                    <div className="max-w-xs">
+                      <Label htmlFor="ministry-category">Ministry Category</Label>
+                      <Select value={ministryCategory} onValueChange={setMinistryCategory}>
+                        <SelectTrigger id="ministry-category">
+                          <SelectValue placeholder="Select category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {ministryCategories.map((ministry) => (
+                            <SelectItem key={ministry} value={ministry}>
+                              {ministry.charAt(0).toUpperCase() + ministry.slice(1)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {loadingMinistry ? (
+                      <div className="flex justify-center py-12">
+                        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                      </div>
+                    ) : ministryImages.length === 0 ? (
+                      <div className="text-center py-12 text-muted-foreground">
+                        <ImageIcon className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                        <p>No images for this ministry yet.</p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {ministryImages.map((image) => (
+                          <div key={image.id} className="relative group">
+                            <div className="aspect-square rounded-lg border bg-muted overflow-hidden">
+                              <img
+                                src={image.src}
+                                alt={image.alt}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <div className="mt-2 flex gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="flex-1"
+                                type="button"
+                                onClick={() => {
+                                  setCropTarget({ mode: 'existing', image, scope: 'ministry' });
+                                  setCrop({ x: 0, y: 0 });
+                                  setZoom(1);
+                                  setCroppedAreaPixels(null);
+                                }}
+                              >
+                                <Crop className="w-4 h-4 mr-1" />
+                                Crop
+                              </Button>
+                            </div>
+                            <Button
+                              variant="destructive"
+                              size="icon"
+                              className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={() => handleDeleteImage(image, 'ministry')}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                            <p className="text-xs text-muted-foreground mt-2 truncate">
+                              {image.alt || 'Ministry image'}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -443,7 +913,7 @@ export default function AdminPhotos() {
         </div>
       </main>
       <Footer />
-      <Dialog open={cropIndex !== null} onOpenChange={(open) => !open && setCropIndex(null)}>
+      <Dialog open={cropTarget !== null} onOpenChange={(open) => !open && setCropTarget(null)}>
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>Crop image</DialogTitle>
@@ -453,9 +923,13 @@ export default function AdminPhotos() {
           </DialogHeader>
           <div className="space-y-4">
             <div className="relative h-[360px] w-full bg-muted rounded-lg overflow-hidden">
-              {cropIndex !== null && selectedFiles[cropIndex] && (
+              {cropTarget && (
                 <Cropper
-                  image={selectedFiles[cropIndex].previewUrl}
+                  image={
+                    cropTarget.mode === 'new'
+                      ? selectedFiles[cropTarget.index]?.previewUrl
+                      : cropTarget.image.src
+                  }
                   crop={crop}
                   zoom={zoom}
                   aspect={cropAspect === 'free' ? undefined : Number(cropAspect)}
@@ -493,7 +967,7 @@ export default function AdminPhotos() {
               </div>
             </div>
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setCropIndex(null)}>
+              <Button variant="outline" onClick={() => setCropTarget(null)}>
                 Cancel
               </Button>
               <Button onClick={applyCrop}>Apply Crop</Button>
