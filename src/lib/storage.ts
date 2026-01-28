@@ -1,6 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 
-const STORAGE_BUCKET = 'church-photos';
+const STORAGE_BUCKET = 'gallery';
 
 export interface UploadResult {
   url: string;
