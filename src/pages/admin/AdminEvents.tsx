@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Calendar, Clock, MapPin, Plus, Pencil, Trash2, ArrowLeft, Star, Loader2 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
@@ -53,6 +54,7 @@ const defaultFormState: EventFormState = {
 
 export default function AdminEvents() {
   const { toast } = useToast();
+  const { user, isAdmin } = useAuth();
   const [events, setEvents] = useState<EventRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -93,6 +95,15 @@ export default function AdminEvents() {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
+    if (!isAdmin) {
+      toast({
+        title: 'Admin access required',
+        description: 'Your account does not have permission to manage events.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     if (!formState.title || !formState.eventDate || !formState.startTime) {
       toast({
         title: 'Missing required fields',
@@ -118,13 +129,20 @@ export default function AdminEvents() {
 
     const { error } = editingId
       ? await supabase.from('events').update(payload).eq('id', editingId)
-      : await supabase.from('events').insert(payload);
+      : await supabase.from('events').insert({
+          ...payload,
+          created_by: user?.id ?? null,
+        });
 
     if (error) {
       console.error('Event save error:', error);
+      const fallbackMessage = error.message || 'Please check your permissions and try again.';
+      const isRlsError = error.message?.toLowerCase().includes('row-level security');
       toast({
         title: 'Unable to save event',
-        description: error.message,
+        description: isRlsError
+          ? 'Your account needs the admin role to update events.'
+          : fallbackMessage,
         variant: 'destructive',
       });
     } else {
@@ -201,6 +219,20 @@ export default function AdminEvents() {
               <p className="text-muted-foreground">Create, update, and feature upcoming events.</p>
             </div>
           </div>
+
+          {!isAdmin && (
+            <Card className="mb-6 border-destructive/40 bg-destructive/5">
+              <CardHeader>
+                <CardTitle>Admin permissions required</CardTitle>
+                <CardDescription>
+                  The current account does not have access to create, update, or delete events.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="text-sm text-muted-foreground">
+                Please assign the admin role to {user?.email ?? 'this user'} in Supabase, then refresh.
+              </CardContent>
+            </Card>
+          )}
 
           <div className="grid gap-6 lg:grid-cols-[1.1fr_1fr]">
             <Card>
@@ -328,7 +360,7 @@ export default function AdminEvents() {
                   )}
 
                   <div className="flex flex-wrap gap-2">
-                    <Button type="submit" disabled={saving}>
+                    <Button type="submit" disabled={saving || !isAdmin}>
                       {saving ? (
                         <>
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
