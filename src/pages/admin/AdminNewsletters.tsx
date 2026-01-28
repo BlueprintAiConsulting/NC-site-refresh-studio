@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Switch } from '@/components/ui/switch';
 import { 
   FileText, 
   Upload, 
@@ -15,61 +16,198 @@ import {
   Trash2, 
   ArrowLeft,
   Calendar,
-  CheckCircle2
+  CheckCircle2,
+  Loader2,
+  Pencil
 } from 'lucide-react';
-import { toast } from 'sonner';
-import newslettersData from '@/content/newsletters.json';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+
+interface NewsletterRecord {
+  id: string;
+  title: string;
+  month: string;
+  year: string;
+  date: string;
+  description: string | null;
+  pdf_url: string;
+  pdf_path: string;
+  featured: boolean;
+}
 
 export default function AdminNewsletters() {
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const { user, isAdmin } = useAuth();
   const [isUploading, setIsUploading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [newsletters, setNewsletters] = useState<NewsletterRecord[]>([]);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingPath, setEditingPath] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     title: '',
     month: '',
     year: new Date().getFullYear().toString(),
     description: '',
+    featured: false,
   });
+
+  useEffect(() => {
+    void fetchNewsletters();
+  }, []);
+
+  const fetchNewsletters = async () => {
+    setIsLoading(true);
+    const { data, error } = await supabase
+      .from('newsletters' as any)
+      .select('*')
+      .order('date', { ascending: false });
+
+    if (error) {
+      console.error('Failed to load newsletters:', error);
+      toast({
+        title: 'Unable to load newsletters',
+        description: 'Please try again in a moment.',
+        variant: 'destructive',
+      });
+    } else {
+      setNewsletters((data ?? []) as unknown as NewsletterRecord[]);
+    }
+
+    setIsLoading(false);
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       if (file.type !== 'application/pdf') {
-        toast.error('Please select a PDF file');
+        toast({
+          title: 'Invalid file type',
+          description: 'Please select a PDF file.',
+          variant: 'destructive',
+        });
         return;
       }
       if (file.size > 10 * 1024 * 1024) { // 10MB limit
-        toast.error('File size must be less than 10MB');
+        toast({
+          title: 'File too large',
+          description: 'File size must be less than 10MB.',
+          variant: 'destructive',
+        });
         return;
       }
       setSelectedFile(file);
-      toast.success(`Selected: ${file.name}`);
+      toast({
+        title: 'File selected',
+        description: file.name,
+      });
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!selectedFile) {
-      toast.error('Please select a PDF file');
+    if (!isAdmin) {
+      toast({
+        title: 'Admin access required',
+        description: 'Your account does not have permission to manage newsletters.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!selectedFile && !editingId) {
+      toast({
+        title: 'Missing PDF',
+        description: 'Please select a PDF file to upload.',
+        variant: 'destructive',
+      });
       return;
     }
 
     if (!formData.title || !formData.month || !formData.year) {
-      toast.error('Please fill in all required fields');
+      toast({
+        title: 'Missing required fields',
+        description: 'Please fill in all required fields.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const parsedDate = new Date(`${formData.month} 1, ${formData.year}`);
+    if (Number.isNaN(parsedDate.getTime())) {
+      toast({
+        title: 'Invalid month/year',
+        description: 'Please provide a valid month and year.',
+        variant: 'destructive',
+      });
       return;
     }
 
     setIsUploading(true);
 
     try {
-      // In a real implementation, you would:
-      // 1. Upload the PDF to your server/storage
-      // 2. Update the newsletters.json file via API
-      
-      toast.info('Upload feature coming soon!', {
-        description: 'For now, manually upload PDFs to public/newsletters/ and update newsletters.json',
-        duration: 5000,
+      let pdfUrl = '';
+      let pdfPath = '';
+
+      if (selectedFile) {
+        const safeName = selectedFile.name.replace(/[^a-zA-Z0-9.-]/g, '-').toLowerCase();
+        const filePath = `${formData.year}/${Date.now()}-${safeName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('newsletters')
+          .upload(filePath, selectedFile, {
+            cacheControl: '3600',
+            upsert: false,
+          });
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('newsletters')
+          .getPublicUrl(filePath);
+
+        pdfUrl = publicUrl;
+        pdfPath = filePath;
+      } else if (editingId && editingPath) {
+        const { data: { publicUrl } } = supabase.storage
+          .from('newsletters')
+          .getPublicUrl(editingPath);
+        pdfUrl = publicUrl;
+        pdfPath = editingPath;
+      }
+
+      if (!pdfUrl || !pdfPath) {
+        throw new Error('Missing PDF upload details');
+      }
+
+      if (formData.featured) {
+        await supabase.from('newsletters' as any).update({ featured: false }).neq('id', editingId ?? '');
+      }
+
+      const payload = {
+        title: formData.title.trim(),
+        month: formData.month.trim(),
+        year: formData.year.trim(),
+        date: parsedDate.toISOString().split('T')[0],
+        description: formData.description.trim() || null,
+        pdf_url: pdfUrl,
+        pdf_path: pdfPath,
+        featured: formData.featured,
+        created_by: user?.id ?? null,
+      };
+
+      const { error } = editingId
+        ? await supabase.from('newsletters' as any).update(payload).eq('id', editingId)
+        : await supabase.from('newsletters' as any).insert(payload);
+
+      if (error) throw error;
+
+      toast({
+        title: editingId ? 'Newsletter updated' : 'Newsletter uploaded',
+        description: 'Your newsletter has been saved.',
       });
 
       // Reset form
@@ -78,22 +216,81 @@ export default function AdminNewsletters() {
         month: '',
         year: new Date().getFullYear().toString(),
         description: '',
+        featured: false,
       });
       setSelectedFile(null);
+      setEditingId(null);
+      setEditingPath(null);
       if (e.target instanceof HTMLFormElement) {
         e.target.reset();
       }
+      await fetchNewsletters();
     } catch (error) {
       console.error('Upload error:', error);
-      toast.error('Failed to upload newsletter');
+      const message = error instanceof Error ? error.message : 'Failed to upload newsletter';
+      toast({
+        title: 'Failed to upload newsletter',
+        description: message,
+        variant: 'destructive',
+      });
     } finally {
       setIsUploading(false);
     }
   };
 
-  const sortedNewsletters = [...newslettersData.newsletters].sort((a, b) => 
-    new Date(b.date).getTime() - new Date(a.date).getTime()
+  const sortedNewsletters = useMemo(
+    () => [...newsletters].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
+    [newsletters]
   );
+
+  const handleEdit = (newsletter: NewsletterRecord) => {
+    setEditingId(newsletter.id);
+    setEditingPath(newsletter.pdf_path);
+    setSelectedFile(null);
+    setFormData({
+      title: newsletter.title,
+      month: newsletter.month,
+      year: newsletter.year,
+      description: newsletter.description ?? '',
+      featured: newsletter.featured,
+    });
+  };
+
+  const handleDelete = async (newsletter: NewsletterRecord) => {
+    const shouldDelete = window.confirm('Delete this newsletter? This cannot be undone.');
+    if (!shouldDelete) return;
+
+    try {
+      if (newsletter.pdf_path) {
+        const { error: storageError } = await supabase
+          .storage
+          .from('newsletters')
+          .remove([newsletter.pdf_path]);
+        if (storageError) throw storageError;
+      }
+
+      const { error: dbError } = await supabase
+        .from('newsletters' as any)
+        .delete()
+        .eq('id', newsletter.id);
+
+      if (dbError) throw dbError;
+
+      toast({
+        title: 'Newsletter deleted',
+        description: 'The newsletter has been removed.',
+      });
+      await fetchNewsletters();
+    } catch (error) {
+      console.error('Delete error:', error);
+      const message = error instanceof Error ? error.message : 'Failed to delete newsletter';
+      toast({
+        title: 'Failed to delete newsletter',
+        description: message,
+        variant: 'destructive',
+      });
+    }
+  };
 
   return (
     <>
@@ -142,7 +339,7 @@ export default function AdminNewsletters() {
                     {/* File Upload */}
                     <div className="space-y-2">
                       <Label htmlFor="newsletter-file">
-                        Newsletter PDF <span className="text-destructive">*</span>
+                        Newsletter PDF {!editingId && <span className="text-destructive">*</span>}
                       </Label>
                       <div className="flex items-center gap-4">
                         <Input
@@ -159,6 +356,11 @@ export default function AdminNewsletters() {
                       <p className="text-xs text-muted-foreground">
                         Max file size: 10MB. PDF format only.
                       </p>
+                      {editingId && (
+                        <p className="text-xs text-muted-foreground">
+                          Leave empty to keep the existing PDF.
+                        </p>
+                      )}
                     </div>
 
                     {/* Title */}
@@ -216,31 +418,50 @@ export default function AdminNewsletters() {
                       />
                     </div>
 
-                    <Button type="submit" disabled={isUploading} className="w-full">
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        id="featured"
+                        checked={formData.featured}
+                        onCheckedChange={(value) => setFormData({ ...formData, featured: value })}
+                      />
+                      <Label htmlFor="featured">Mark as featured</Label>
+                    </div>
+
+                    <Button type="submit" disabled={isUploading || !isAdmin} className="w-full">
                       {isUploading ? (
-                        <>Uploading...</>
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Uploading...
+                        </>
                       ) : (
                         <>
                           <Upload className="w-4 h-4 mr-2" />
-                          Upload Newsletter
+                          {editingId ? 'Update Newsletter' : 'Upload Newsletter'}
                         </>
                       )}
                     </Button>
+                    {editingId && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full"
+                        onClick={() => {
+                          setEditingId(null);
+                          setEditingPath(null);
+                          setSelectedFile(null);
+                          setFormData({
+                            title: '',
+                            month: '',
+                            year: new Date().getFullYear().toString(),
+                            description: '',
+                            featured: false,
+                          });
+                        }}
+                      >
+                        Cancel Editing
+                      </Button>
+                    )}
                   </form>
-
-                  {/* Manual Upload Instructions */}
-                  <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg">
-                    <h4 className="font-semibold text-sm mb-2 text-blue-900 dark:text-blue-100">
-                      📝 Manual Upload Instructions
-                    </h4>
-                    <ol className="text-sm text-blue-800 dark:text-blue-200 space-y-1 list-decimal list-inside">
-                      <li>Upload your PDF to <code className="bg-blue-100 dark:bg-blue-900 px-1 rounded">public/newsletters/</code></li>
-                      <li>Name it following the pattern: <code className="bg-blue-100 dark:bg-blue-900 px-1 rounded">january-2026.pdf</code></li>
-                      <li>Edit <code className="bg-blue-100 dark:bg-blue-900 px-1 rounded">src/content/newsletters.json</code></li>
-                      <li>Add a new entry with the PDF path and details</li>
-                      <li>Set <code className="bg-blue-100 dark:bg-blue-900 px-1 rounded">"featured": true</code> for the latest newsletter</li>
-                    </ol>
-                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -248,7 +469,14 @@ export default function AdminNewsletters() {
             {/* Manage Tab */}
             <TabsContent value="manage">
               <div className="space-y-4">
-                {sortedNewsletters.length === 0 ? (
+                {isLoading ? (
+                  <Card>
+                    <CardContent className="py-12 text-center">
+                      <Loader2 className="w-8 h-8 mx-auto mb-4 animate-spin text-muted-foreground" />
+                      <p className="text-muted-foreground">Loading newsletters...</p>
+                    </CardContent>
+                  </Card>
+                ) : sortedNewsletters.length === 0 ? (
                   <Card>
                     <CardContent className="py-12 text-center">
                       <FileText className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
@@ -286,7 +514,7 @@ export default function AdminNewsletters() {
                         <div className="flex flex-wrap gap-2">
                           <Button asChild variant="outline" size="sm">
                             <a
-                              href={newsletter.pdfUrl}
+                              href={newsletter.pdf_url}
                               target="_blank"
                               rel="noopener noreferrer"
                             >
@@ -295,7 +523,7 @@ export default function AdminNewsletters() {
                             </a>
                           </Button>
                           <Button asChild variant="outline" size="sm">
-                            <a href={newsletter.pdfUrl} download>
+                            <a href={newsletter.pdf_url} download>
                               <Download className="w-4 h-4 mr-2" />
                               Download
                             </a>
@@ -303,12 +531,16 @@ export default function AdminNewsletters() {
                           <Button
                             variant="outline"
                             size="sm"
+                            onClick={() => handleEdit(newsletter)}
+                          >
+                            <Pencil className="w-4 h-4 mr-2" />
+                            Edit
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
                             className="text-destructive hover:text-destructive"
-                            onClick={() => {
-                              toast.info('Delete feature coming soon!', {
-                                description: 'Manually remove from newsletters.json for now',
-                              });
-                            }}
+                            onClick={() => handleDelete(newsletter)}
                           >
                             <Trash2 className="w-4 h-4 mr-2" />
                             Delete
