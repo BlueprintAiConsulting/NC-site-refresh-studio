@@ -27,12 +27,6 @@ const pastors: StaffMember[] = [
 
 const staff: StaffMember[] = [
   {
-    id: "3",
-    name: "Michael Chen",
-    role: "Music Director",
-    bio: "Michael leads our music ministry and choir. With over 20 years of experience in church music, he brings passion and excellence to our worship.",
-  },
-  {
     id: "6",
     name: "Marsha Snyder",
     role: "Pianist (8:00 AM) & Worship Leader (10:30 AM)",
@@ -49,20 +43,6 @@ const staff: StaffMember[] = [
     name: "ALL NCCC Family",
     role: "Ministers of the Gospel",
     bio: "We believe every member is called to share the love of Christ through service and witness.",
-  },
-  {
-    id: "4",
-    name: "Emily Davis",
-    role: "Children's Ministry Director",
-    bio: "Emily oversees our Sunday School and children's programs. She is dedicated to nurturing the faith of our youngest members.",
-  },
-  {
-    id: "5",
-    name: "Robert Williams",
-    role: "Office Administrator",
-    bio: "Robert keeps our church running smoothly behind the scenes. He manages communications, scheduling, and administrative needs.",
-    email: "office@newcreationumc.org",
-    phone: siteConfig.church.contact.phone,
   },
 ];
 
