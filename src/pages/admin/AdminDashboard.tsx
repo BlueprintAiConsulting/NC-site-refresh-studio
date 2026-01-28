@@ -1,21 +1,62 @@
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { 
   Image, 
   LogOut, 
-  Users, 
   Calendar,
   BarChart3,
   Settings,
   FileText
 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useCalendarEvents } from '@/hooks/useCalendarEvents';
+import ministriesData from '@/content/ministries.json';
 
 export default function AdminDashboard() {
   const { user, signOut } = useAuth();
+  const { data: calendarEvents, isLoading: calendarLoading } = useCalendarEvents(50);
+
+  const { data: eventsCount, isLoading: eventsLoading } = useQuery({
+    queryKey: ['admin-events-count'],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from('events')
+        .select('*', { count: 'exact', head: true });
+
+      if (error) throw error;
+      return count ?? 0;
+    },
+  });
+
+  const { data: galleryCount, isLoading: galleryLoading } = useQuery({
+    queryKey: ['admin-gallery-count'],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from('gallery_images')
+        .select('*', { count: 'exact', head: true });
+
+      if (error) throw error;
+      return count ?? 0;
+    },
+  });
+
+  const { data: monthlyVisitors, isLoading: visitorsLoading } = useQuery({
+    queryKey: ['admin-monthly-visitors'],
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke('get-monthly-visitors');
+
+      if (error) throw error;
+      return data?.visitors ?? 0;
+    },
+  });
+
+  const totalEvents = (eventsCount ?? 0) + (calendarEvents?.length ?? 0);
+  const ministriesCount = ministriesData.ministries.length;
 
   const adminActions = [
     {
@@ -40,25 +81,11 @@ export default function AdminDashboard() {
       color: 'bg-green-500/10 text-green-600',
     },
     {
-      title: 'Ministries',
-      description: 'Update ministry information',
-      icon: Users,
-      href: '/admin/ministries',
-      color: 'bg-purple-500/10 text-purple-600',
-    },
-    {
       title: 'Analytics',
       description: 'View site statistics',
       icon: BarChart3,
       href: '/admin/analytics',
       color: 'bg-orange-500/10 text-orange-600',
-    },
-    {
-      title: 'Content',
-      description: 'Edit page content',
-      icon: FileText,
-      href: '/admin/content',
-      color: 'bg-pink-500/10 text-pink-600',
     },
     {
       title: 'Settings',
@@ -92,26 +119,32 @@ export default function AdminDashboard() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <Card>
               <CardHeader className="pb-3">
-                <CardDescription>Total Events</CardDescription>
-                <CardTitle className="text-3xl">12</CardTitle>
+                <CardDescription>Upcoming Events</CardDescription>
+                <CardTitle className="text-3xl">
+                  {eventsLoading || calendarLoading ? '—' : totalEvents}
+                </CardTitle>
               </CardHeader>
             </Card>
             <Card>
               <CardHeader className="pb-3">
                 <CardDescription>Gallery Photos</CardDescription>
-                <CardTitle className="text-3xl">48</CardTitle>
+                <CardTitle className="text-3xl">
+                  {galleryLoading ? '—' : galleryCount ?? 0}
+                </CardTitle>
               </CardHeader>
             </Card>
             <Card>
               <CardHeader className="pb-3">
                 <CardDescription>Monthly Visitors</CardDescription>
-                <CardTitle className="text-3xl">1.2k</CardTitle>
+                <CardTitle className="text-3xl">
+                  {visitorsLoading ? '—' : monthlyVisitors}
+                </CardTitle>
               </CardHeader>
             </Card>
             <Card>
               <CardHeader className="pb-3">
                 <CardDescription>Active Ministries</CardDescription>
-                <CardTitle className="text-3xl">8</CardTitle>
+                <CardTitle className="text-3xl">{ministriesCount}</CardTitle>
               </CardHeader>
             </Card>
           </div>
