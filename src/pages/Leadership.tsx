@@ -17,16 +17,6 @@ interface StaffMember {
   imageCategory?: string;
 }
 
-const pastors: StaffMember[] = [
-  {
-    id: "1",
-    name: "Pastor Blanca Baker",
-    role: "Senior Pastor",
-    bio: "",
-    email: "bbaker@susumc.org",
-  },
-];
-
 function StaffCard({ member }: { member: StaffMember }) {
   const initials = member.name
     .split(' ')
@@ -89,9 +79,22 @@ function StaffCard({ member }: { member: StaffMember }) {
 }
 
 const Leadership = () => {
+  const { data: pastorImages } = useGalleryImages("staff-pastor-blanca");
   const { data: marshaImages } = useGalleryImages("staff-marsha-snyder");
   const { data: mikeImages } = useGalleryImages("staff-mike-krall");
   const { data: ministersImages } = useGalleryImages("staff-ministers");
+
+  const pastors: StaffMember[] = [
+    {
+      id: "1",
+      name: "Pastor Blanca Baker",
+      role: "Senior Pastor",
+      bio: "",
+      email: "bbaker@susumc.org",
+      imageCategory: "staff-pastor-blanca",
+      imageUrl: pastorImages?.[0]?.src,
+    },
+  ];
 
   const staff: StaffMember[] = [
     {
