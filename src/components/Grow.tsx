@@ -1,42 +1,48 @@
 import { BookOpen, Users, Calendar, GraduationCap } from "lucide-react";
 import { FadeIn, StaggerContainer, StaggerItem } from "./animations/FadeIn";
+import { useGalleryImages } from "@/hooks/useGalleryImages";
 import sundaySchoolImg from "@/assets/grow-sunday-school.jpg";
 import smallGroupsImg from "@/assets/grow-small-groups.jpg";
 import bibleStudyImg from "@/assets/grow-bible-study.jpg";
 import discipleshipImg from "@/assets/grow-discipleship.jpg";
 
-const growOpportunities = [
-  {
-    icon: BookOpen,
-    title: "Children's Sunday School",
-    description: "Discussion-based classes for kids focused on Scripture and faith basics.",
-    time: "Sundays at 9:15 AM",
-    image: sundaySchoolImg,
-  },
-  {
-    icon: Users,
-    title: "Bob Yinger / Jeff Merkert Adult Class",
-    description: "Adult discussion group centered on Scripture and real-life application.",
-    time: "Sundays at 9:15 AM",
-    image: smallGroupsImg,
-  },
-  {
-    icon: GraduationCap,
-    title: "Nursery",
-    description: "Care available for little ones during the 10:30 AM service.",
-    time: "During the 10:30 AM service",
-    image: bibleStudyImg,
-  },
-  {
-    icon: Calendar,
-    title: "Jr Church",
-    description: "Kids are invited partway into the 10:30 AM service for age-appropriate teaching.",
-    time: "Partway into the 10:30 AM service",
-    image: discipleshipImg,
-  },
-];
-
 export function Grow() {
+  const { data: sundaySchoolImages } = useGalleryImages("grow-childrens-sunday-school");
+  const { data: adultClassImages } = useGalleryImages("grow-adult-class");
+  const { data: nurseryImages } = useGalleryImages("grow-nursery");
+  const { data: jrChurchImages } = useGalleryImages("grow-jr-church");
+
+  const growOpportunities = [
+    {
+      icon: BookOpen,
+      title: "Children's Sunday School",
+      description: "Discussion-based classes for kids focused on Scripture and faith basics.",
+      time: "Sundays at 9:15 AM",
+      image: sundaySchoolImages?.[0]?.src || sundaySchoolImg,
+    },
+    {
+      icon: Users,
+      title: "Bob Yinger / Jeff Merkert Adult Class",
+      description: "Adult discussion group centered on Scripture and real-life application.",
+      time: "Sundays at 9:15 AM",
+      image: adultClassImages?.[0]?.src || smallGroupsImg,
+    },
+    {
+      icon: GraduationCap,
+      title: "Nursery",
+      description: "Care available for little ones during the 10:30 AM service.",
+      time: "During the 10:30 AM service",
+      image: nurseryImages?.[0]?.src || bibleStudyImg,
+    },
+    {
+      icon: Calendar,
+      title: "Jr Church",
+      description: "Kids are invited partway into the 10:30 AM service for age-appropriate teaching.",
+      time: "Partway into the 10:30 AM service",
+      image: jrChurchImages?.[0]?.src || discipleshipImg,
+    },
+  ];
+
   return (
     <section
       id="grow"
