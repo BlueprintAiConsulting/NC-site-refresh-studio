@@ -21,6 +21,8 @@ const navItems: NavItem[] = [
     label: "About",
     children: [
       { href: "#about", label: "Our Story", isAnchor: true },
+      { href: "#beliefs", label: "What We Believe", isAnchor: true },
+      { href: "#ministries", label: "Ministries & Groups", isAnchor: true },
       { href: "/leadership", label: "Leadership", isAnchor: false },
       { href: "/ministries", label: "Ministries", isAnchor: false },
     ],
@@ -35,9 +37,10 @@ const navItems: NavItem[] = [
   {
     label: "Grow",
     children: [
-      { href: "#grow", label: "Bible Studies", isAnchor: true },
-      { href: "#grow", label: "Small Groups", isAnchor: true },
-      { href: "#grow", label: "Youth Ministry", isAnchor: true },
+      { href: "#grow", label: "Children's Sunday School", isAnchor: true },
+      { href: "#grow", label: "Adult Class", isAnchor: true },
+      { href: "#grow", label: "Nursery", isAnchor: true },
+      { href: "#grow", label: "Jr Church", isAnchor: true },
     ],
   },
   {
@@ -54,6 +57,10 @@ const navItems: NavItem[] = [
       { href: "#connect", label: "Join a Group", isAnchor: true },
       { href: "#events", label: "Events", isAnchor: true },
       { href: "#gallery", label: "Gallery", isAnchor: true },
+      { href: "#social", label: "Social Media", isAnchor: true },
+      { href: "#plan", label: "Plan a Visit", isAnchor: true },
+      { href: "#give", label: "Give", isAnchor: true },
+      { href: "#room-reservations", label: "Room Reservations", isAnchor: true },
       { href: "#contact", label: "Contact Us", isAnchor: true },
     ],
   },

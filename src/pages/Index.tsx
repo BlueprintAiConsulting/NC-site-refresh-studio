@@ -28,19 +28,19 @@ const Index = () => {
         <div id="top" />
         <Hero />
         <About />
-        <WhatWeBelieve />
         <Worship />
+        <Events />
         <Grow />
         <Ministries />
         <Serve />
         <Connect />
-        <Events />
         <PlanVisit />
         <Give />
         {/* <Newsletter /> */}
         <PhotoGallery />
         <RoomReservations />
         <SocialMediaSection />
+        <WhatWeBelieve />
         <Contact />
       </main>
       <Footer />
