@@ -115,22 +115,18 @@ export function About() {
             <h3 className="font-semibold text-xl mb-4">Our Story</h3>
             <div className="prose prose-sm max-w-none text-muted-foreground">
               <p className="mb-4 leading-relaxed">
-                New Creation Community Church was founded with a simple vision: to create a welcoming 
-                space where people from all walks of life could encounter God's transforming love. 
-                What began as a small gathering of faithful believers has grown into a vibrant 
-                community dedicated to worship, discipleship, and service.
-              </p>
-              <p className="mb-4 leading-relaxed">
-                Over the years, we have seen countless lives changed through the power of the Gospel. 
-                From our support ministries like GriefShare to our weekly worship gatherings, we 
-                remain committed to meeting people where they are and walking alongside them on 
-                their spiritual journey.
+                Our mission and desire is to welcome and provide you with the support of our NCCC
+                community of faith that will enable you to connect with God in the most meaningful way
+                to impact your life and your family members’ lives. It is our prayer and our hope that
+                you will be able to find this true Christian community of faith that truly “Connects
+                Church & Home” here at NCCC as this is what we believe that we are all seeking in our
+                lives.
               </p>
               <p className="leading-relaxed">
-                Today, we continue to grow as a family of faith, united by our shared commitment 
-                to loving God, loving people, and making disciples. Whether you're seeking community, 
-                exploring faith for the first time, or looking for a place to call home, you are 
-                welcome here.
+                We are a true community of faith, a Christian family of God that prays, struggles and
+                celebrates victories together while supporting and helping one another in our church
+                projects and growing in our faith together. At NCCC, we are constantly evolving and
+                seeking to improve upon the many programs we have in place.
               </p>
             </div>
           </div>
