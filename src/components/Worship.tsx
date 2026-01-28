@@ -66,13 +66,13 @@ export function Worship() {
             return (
               <StaggerItem key={bubble.title}>
                 <div className="card-church h-full flex flex-col items-center">
-                  <div className="relative aspect-square w-full max-w-[300px] rounded-full overflow-hidden flex items-center justify-center text-center p-6">
+                  <div className="relative aspect-square w-full max-w-[360px] rounded-full overflow-hidden flex items-center justify-center text-center p-6">
                     <img
                       src={bubbleImages[index]}
                       alt={bubble.title}
                       className="absolute inset-0 h-full w-full object-cover"
                     />
-                    <div className="absolute inset-0 bg-black/55" />
+                    <div className="absolute inset-0 bg-black/65" />
                     <div className="relative z-10 text-white text-glow">
                       <div className="w-10 h-10 rounded-full bg-white/15 flex items-center justify-center mx-auto mb-3">
                         <Icon className="w-5 h-5 drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]" />
