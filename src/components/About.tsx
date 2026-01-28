@@ -1,10 +1,19 @@
 import { Heart, Target, BookOpen } from "lucide-react";
 import { FadeIn, StaggerContainer, StaggerItem } from "./animations/FadeIn";
+import { useGalleryImages } from "@/hooks/useGalleryImages";
 import missionImg from "@/assets/hero-church-sunset.webp";
 import visionImg from "@/assets/grow-bible-study.jpg";
 import valuesImg from "@/assets/grow-small-groups.jpg";
 
 export function About() {
+  const { data: missionImages } = useGalleryImages("mission");
+  const { data: visionImages } = useGalleryImages("vision");
+  const { data: valuesImages } = useGalleryImages("values");
+
+  const missionImage = missionImages?.[0]?.src || missionImg;
+  const visionImage = visionImages?.[0]?.src || visionImg;
+  const valuesImage = valuesImages?.[0]?.src || valuesImg;
+
   return (
     <section id="about" className="section-church border-t border-border">
       <div className="container max-w-5xl mx-auto px-5">
@@ -22,7 +31,7 @@ export function About() {
             <div className="card-church h-full flex flex-col items-center">
               <div className="relative aspect-square w-full max-w-[260px] rounded-full overflow-hidden flex items-center justify-center text-center p-6">
                 <img
-                  src={missionImg}
+                  src={missionImage}
                   alt="Church gathering"
                   className="absolute inset-0 h-full w-full object-cover"
                 />
@@ -45,7 +54,7 @@ export function About() {
             <div className="card-church h-full flex flex-col items-center">
               <div className="relative aspect-square w-full max-w-[260px] rounded-full overflow-hidden flex items-center justify-center text-center p-6">
                 <img
-                  src={visionImg}
+                  src={visionImage}
                   alt="Bible study group"
                   className="absolute inset-0 h-full w-full object-cover"
                 />
@@ -68,7 +77,7 @@ export function About() {
             <div className="card-church h-full flex flex-col items-center">
               <div className="relative aspect-square w-full max-w-[260px] rounded-full overflow-hidden flex items-center justify-center text-center p-6">
                 <img
-                  src={valuesImg}
+                  src={valuesImage}
                   alt="Small group fellowship"
                   className="absolute inset-0 h-full w-full object-cover"
                 />

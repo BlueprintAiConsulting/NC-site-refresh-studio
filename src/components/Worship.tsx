@@ -1,8 +1,40 @@
-import { Youtube, Facebook, ExternalLink, Music, Clock, Radio } from "lucide-react";
+import { Youtube, Facebook, ExternalLink, Music, Clock, Radio, Sparkles } from "lucide-react";
 import { FadeIn, StaggerContainer, StaggerItem } from "./animations/FadeIn";
 import siteConfig from "@/lib/siteConfig";
+import { useGalleryImages } from "@/hooks/useGalleryImages";
+import worshipBubbleOne from "@/assets/hero-church-sunset.webp";
+import worshipBubbleTwo from "@/assets/grow-discipleship.jpg";
+import worshipBubbleThree from "@/assets/grow-sunday-school.jpg";
 
 export function Worship() {
+  const { data: bubbleOneImages } = useGalleryImages("worship-bubble-1");
+  const { data: bubbleTwoImages } = useGalleryImages("worship-bubble-2");
+  const { data: bubbleThreeImages } = useGalleryImages("worship-bubble-3");
+
+  const bubbleImages = [
+    bubbleOneImages?.[0]?.src || worshipBubbleOne,
+    bubbleTwoImages?.[0]?.src || worshipBubbleTwo,
+    bubbleThreeImages?.[0]?.src || worshipBubbleThree,
+  ];
+
+  const worshipBubbles = [
+    {
+      title: "Traditional Worship",
+      description: "Classic hymns and a reflective atmosphere at 8:00 AM.",
+      icon: Music,
+    },
+    {
+      title: "Contemporary Worship",
+      description: "Modern worship band and Scripture-centered teaching at 10:30 AM.",
+      icon: Sparkles,
+    },
+    {
+      title: "Watch Online",
+      description: "Join services live or catch up anytime on YouTube.",
+      icon: Radio,
+    },
+  ];
+
   return (
     <section id="worship" className="section-church border-t border-border">
       <div className="container max-w-5xl mx-auto px-5">
@@ -14,6 +46,34 @@ export function Worship() {
             Join us for uplifting worship experiences in-person or online.
           </p>
         </FadeIn>
+
+        {/* Worship Bubbles */}
+        <StaggerContainer className="grid md:grid-cols-3 gap-6 mb-12" staggerDelay={0.08}>
+          {worshipBubbles.map((bubble, index) => {
+            const Icon = bubble.icon;
+            return (
+              <StaggerItem key={bubble.title}>
+                <div className="card-church h-full flex flex-col items-center">
+                  <div className="relative aspect-square w-full max-w-[240px] rounded-full overflow-hidden flex items-center justify-center text-center p-6">
+                    <img
+                      src={bubbleImages[index]}
+                      alt={bubble.title}
+                      className="absolute inset-0 h-full w-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black/55" />
+                    <div className="relative z-10 text-white">
+                      <div className="w-10 h-10 rounded-full bg-white/15 flex items-center justify-center mx-auto mb-3">
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <h3 className="font-semibold text-base mb-2">{bubble.title}</h3>
+                      <p className="text-sm leading-relaxed text-white/90">{bubble.description}</p>
+                    </div>
+                  </div>
+                </div>
+              </StaggerItem>
+            );
+          })}
+        </StaggerContainer>
 
         {/* Service Times */}
         <FadeIn delay={0.15}>
