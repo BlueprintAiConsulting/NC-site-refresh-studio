@@ -73,9 +73,9 @@ export function Worship() {
                       className="absolute inset-0 h-full w-full object-cover"
                     />
                     <div className="absolute inset-0 bg-black/55" />
-                    <div className="relative z-10 text-white">
+                    <div className="relative z-10 text-white text-glow">
                       <div className="w-10 h-10 rounded-full bg-white/15 flex items-center justify-center mx-auto mb-3">
-                        <Icon className="w-5 h-5" />
+                        <Icon className="w-5 h-5 drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]" />
                       </div>
                       <h3 className="font-semibold text-base mb-2">{bubble.title}</h3>
                       <p className="text-sm leading-relaxed text-white/90">{bubble.description}</p>
