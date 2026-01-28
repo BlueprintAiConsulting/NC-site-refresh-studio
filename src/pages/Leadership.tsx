@@ -33,6 +33,24 @@ const staff: StaffMember[] = [
     bio: "Michael leads our music ministry and choir. With over 20 years of experience in church music, he brings passion and excellence to our worship.",
   },
   {
+    id: "6",
+    name: "Marsha Snyder",
+    role: "Pianist (8:00 AM) & Worship Leader (10:30 AM)",
+    bio: "Marsha serves as our 8:00 AM pianist and leads worship for the 10:30 AM service.",
+  },
+  {
+    id: "7",
+    name: "Mike Krall",
+    role: "Custodian",
+    bio: "Mike faithfully cares for our facilities and helps keep our church welcoming and well-maintained.",
+  },
+  {
+    id: "8",
+    name: "ALL NCCC Family",
+    role: "Ministers of the Gospel",
+    bio: "We believe every member is called to share the love of Christ through service and witness.",
+  },
+  {
     id: "4",
     name: "Emily Davis",
     role: "Children's Ministry Director",
