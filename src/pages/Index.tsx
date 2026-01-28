@@ -29,11 +29,11 @@ const Index = () => {
         <About />
         <Worship />
         <Grow />
+        <Ministries />
         <Serve />
         <Connect />
         <Events />
         <PlanVisit />
-        <Ministries />
         <Give />
         {/* <Newsletter /> */}
         <PhotoGallery />
