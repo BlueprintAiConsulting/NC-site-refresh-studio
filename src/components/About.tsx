@@ -41,7 +41,7 @@ export function About() {
         <StaggerContainer className="grid md:grid-cols-3 gap-6 mb-12">
           <StaggerItem>
             <div className="card-church h-full flex flex-col items-center">
-              <div className="relative aspect-square w-full max-w-[260px] rounded-full overflow-hidden flex items-center justify-center text-center p-6">
+              <div className="relative aspect-square w-full max-w-[300px] rounded-full overflow-hidden flex items-center justify-center text-center p-6">
                 <img
                   src={missionImage}
                   alt="Church gathering"
@@ -64,7 +64,7 @@ export function About() {
 
           <StaggerItem>
             <div className="card-church h-full flex flex-col items-center">
-              <div className="relative aspect-square w-full max-w-[260px] rounded-full overflow-hidden flex items-center justify-center text-center p-6">
+              <div className="relative aspect-square w-full max-w-[300px] rounded-full overflow-hidden flex items-center justify-center text-center p-6">
                 <img
                   src={visionImage}
                   alt="Bible study group"
@@ -87,7 +87,7 @@ export function About() {
 
           <StaggerItem>
             <div className="card-church h-full flex flex-col items-center">
-              <div className="relative aspect-square w-full max-w-[260px] rounded-full overflow-hidden flex items-center justify-center text-center p-6">
+              <div className="relative aspect-square w-full max-w-[300px] rounded-full overflow-hidden flex items-center justify-center text-center p-6">
                 <img
                   src={valuesImage}
                   alt="Small group fellowship"

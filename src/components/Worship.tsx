@@ -66,7 +66,7 @@ export function Worship() {
             return (
               <StaggerItem key={bubble.title}>
                 <div className="card-church h-full flex flex-col items-center">
-                  <div className="relative aspect-square w-full max-w-[240px] rounded-full overflow-hidden flex items-center justify-center text-center p-6">
+                  <div className="relative aspect-square w-full max-w-[300px] rounded-full overflow-hidden flex items-center justify-center text-center p-6">
                     <img
                       src={bubbleImages[index]}
                       alt={bubble.title}
