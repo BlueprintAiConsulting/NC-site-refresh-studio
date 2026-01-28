@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,6 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Slider } from '@/components/ui/slider';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { 
@@ -14,28 +16,147 @@ import {
   X,
   Loader2,
   ArrowLeft,
-  Trash2
+  Trash2,
+  Crop
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { uploadPhotos } from '@/lib/storage';
 import { supabase } from '@/integrations/supabase/client';
+import Cropper from 'react-easy-crop';
+
+interface SelectedFile {
+  file: File;
+  previewUrl: string;
+  croppedFile?: File;
+  croppedPreviewUrl?: string;
+}
+
+type CropArea = { width: number; height: number; x: number; y: number };
+
+const cropAspectOptions = [
+  { label: 'Free', value: 'free' },
+  { label: 'Square', value: '1' },
+  { label: 'Landscape 4:3', value: '1.3333' },
+  { label: 'Portrait 3:4', value: '0.75' },
+];
 
 export default function AdminPhotos() {
   const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [selectedFiles, setSelectedFiles] = useState<SelectedFile[]>([]);
   const [category, setCategory] = useState('gallery');
   const [altTexts, setAltTexts] = useState<Record<number, string>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [cropIndex, setCropIndex] = useState<number | null>(null);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<CropArea | null>(null);
+  const [cropAspect, setCropAspect] = useState<string>('1');
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    setSelectedFiles((prev) => [...prev, ...files]);
+    const mapped = files.map((file) => ({
+      file,
+      previewUrl: URL.createObjectURL(file),
+    }));
+    setSelectedFiles((prev) => [...prev, ...mapped]);
   };
 
   const removeFile = (index: number) => {
-    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+    setSelectedFiles((prev) => {
+      const next = [...prev];
+      const removed = next.splice(index, 1)[0];
+      if (removed) {
+        URL.revokeObjectURL(removed.previewUrl);
+        if (removed.croppedPreviewUrl) {
+          URL.revokeObjectURL(removed.croppedPreviewUrl);
+        }
+      }
+      return next;
+    });
+    setAltTexts((prev) => {
+      const updated = { ...prev };
+      delete updated[index];
+      return updated;
+    });
+  };
+
+  const onCropComplete = useCallback((_: CropArea, croppedArea: CropArea) => {
+    setCroppedAreaPixels(croppedArea);
+  }, []);
+
+  const createImage = (url: string) =>
+    new Promise<HTMLImageElement>((resolve, reject) => {
+      const image = new Image();
+      image.addEventListener('load', () => resolve(image));
+      image.addEventListener('error', (error) => reject(error));
+      image.setAttribute('crossOrigin', 'anonymous');
+      image.src = url;
+    });
+
+  const getCroppedFile = async (imageSrc: string, pixelCrop: CropArea, fileName: string) => {
+    const image = await createImage(imageSrc);
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Unable to crop image');
+
+    canvas.width = pixelCrop.width;
+    canvas.height = pixelCrop.height;
+
+    ctx.drawImage(
+      image,
+      pixelCrop.x,
+      pixelCrop.y,
+      pixelCrop.width,
+      pixelCrop.height,
+      0,
+      0,
+      pixelCrop.width,
+      pixelCrop.height
+    );
+
+    return new Promise<File>((resolve, reject) => {
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          reject(new Error('Unable to crop image'));
+          return;
+        }
+        resolve(new File([blob], fileName, { type: blob.type }));
+      }, 'image/jpeg', 0.92);
+    });
+  };
+
+  const applyCrop = async () => {
+    if (cropIndex === null || !croppedAreaPixels) return;
+    const target = selectedFiles[cropIndex];
+    if (!target) return;
+
+    try {
+      const croppedFile = await getCroppedFile(target.previewUrl, croppedAreaPixels, target.file.name);
+      const croppedPreviewUrl = URL.createObjectURL(croppedFile);
+      setSelectedFiles((prev) => {
+        const next = [...prev];
+        const current = next[cropIndex];
+        if (current?.croppedPreviewUrl) {
+          URL.revokeObjectURL(current.croppedPreviewUrl);
+        }
+        next[cropIndex] = {
+          ...current,
+          croppedFile,
+          croppedPreviewUrl,
+        };
+        return next;
+      });
+      setCropIndex(null);
+    } catch (error) {
+      console.error('Crop error:', error);
+      toast({
+        title: 'Crop failed',
+        description: 'Unable to crop this image. Please try again.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleUpload = async () => {
@@ -52,12 +173,15 @@ export default function AdminPhotos() {
 
     try {
       // Upload to Supabase Storage
-      const uploadResults = await uploadPhotos(selectedFiles, category);
+      const uploadResults = await uploadPhotos(
+        selectedFiles.map((item) => item.croppedFile ?? item.file),
+        category
+      );
 
       // Save to database
       const photoRecords = uploadResults.map((result, index) => ({
         src: result.url,
-        alt: altTexts[index] || selectedFiles[index].name.replace(/\.[^/.]+$/, ''),
+        alt: altTexts[index] || selectedFiles[index].file.name.replace(/\.[^/.]+$/, ''),
         category: category,
       }));
 
@@ -72,6 +196,12 @@ export default function AdminPhotos() {
         description: `${selectedFiles.length} photo(s) uploaded successfully`,
       });
 
+      selectedFiles.forEach((file) => {
+        URL.revokeObjectURL(file.previewUrl);
+        if (file.croppedPreviewUrl) {
+          URL.revokeObjectURL(file.croppedPreviewUrl);
+        }
+      });
       setSelectedFiles([]);
       setAltTexts({});
       if (fileInputRef.current) {
@@ -180,14 +310,54 @@ export default function AdminPhotos() {
                     <div className="space-y-3">
                       <Label>Selected Files ({selectedFiles.length})</Label>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        {selectedFiles.map((file, index) => (
+                        {selectedFiles.map((item, index) => (
                           <div key={index} className="relative group">
                             <div className="aspect-square rounded-lg border bg-muted overflow-hidden">
                               <img
-                                src={URL.createObjectURL(file)}
-                                alt={file.name}
+                                src={item.croppedPreviewUrl ?? item.previewUrl}
+                                alt={item.file.name}
                                 className="w-full h-full object-cover"
                               />
+                            </div>
+                            <div className="absolute bottom-2 left-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Button
+                                variant="secondary"
+                                size="sm"
+                                className="flex-1"
+                                onClick={() => {
+                                  setCropIndex(index);
+                                  setCrop({ x: 0, y: 0 });
+                                  setZoom(1);
+                                  setCroppedAreaPixels(null);
+                                }}
+                              >
+                                <Crop className="w-4 h-4 mr-1" />
+                                Crop
+                              </Button>
+                              {item.croppedFile && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="flex-1"
+                                  onClick={() => {
+                                    setSelectedFiles((prev) => {
+                                      const next = [...prev];
+                                      const current = next[index];
+                                      if (current?.croppedPreviewUrl) {
+                                        URL.revokeObjectURL(current.croppedPreviewUrl);
+                                      }
+                                      next[index] = {
+                                        ...current,
+                                        croppedFile: undefined,
+                                        croppedPreviewUrl: undefined,
+                                      };
+                                      return next;
+                                    });
+                                  }}
+                                >
+                                  Reset
+                                </Button>
+                              )}
                             </div>
                             <Button
                               variant="destructive"
@@ -198,7 +368,7 @@ export default function AdminPhotos() {
                               <X className="w-4 h-4" />
                             </Button>
                             <p className="text-xs text-muted-foreground mt-1 truncate">
-                              {file.name}
+                              {item.file.name}
                             </p>
                           </div>
                         ))}
@@ -273,6 +443,64 @@ export default function AdminPhotos() {
         </div>
       </main>
       <Footer />
+      <Dialog open={cropIndex !== null} onOpenChange={(open) => !open && setCropIndex(null)}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Crop image</DialogTitle>
+            <DialogDescription>
+              Adjust the crop to fit your section. Use square crops for bubble images.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="relative h-[360px] w-full bg-muted rounded-lg overflow-hidden">
+              {cropIndex !== null && selectedFiles[cropIndex] && (
+                <Cropper
+                  image={selectedFiles[cropIndex].previewUrl}
+                  crop={crop}
+                  zoom={zoom}
+                  aspect={cropAspect === 'free' ? undefined : Number(cropAspect)}
+                  onCropChange={setCrop}
+                  onCropComplete={onCropComplete}
+                  onZoomChange={setZoom}
+                />
+              )}
+            </div>
+            <div className="grid gap-4 sm:grid-cols-[1fr_200px] sm:items-center">
+              <div className="space-y-2">
+                <Label>Zoom</Label>
+                <Slider
+                  value={[zoom]}
+                  min={1}
+                  max={3}
+                  step={0.1}
+                  onValueChange={(value) => setZoom(value[0] ?? 1)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Aspect</Label>
+                <Select value={cropAspect} onValueChange={setCropAspect}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select aspect" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {cropAspectOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setCropIndex(null)}>
+                Cancel
+              </Button>
+              <Button onClick={applyCrop}>Apply Crop</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
