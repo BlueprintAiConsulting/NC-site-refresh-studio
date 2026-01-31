@@ -10,6 +10,7 @@ import Index from "./pages/Index";
 import Leadership from "./pages/Leadership";
 import MinistriesPage from "./pages/MinistriesPage";
 import NewslettersPage from "./pages/NewslettersPage";
+import OurStory from "./pages/OurStory";
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminPhotos from "./pages/admin/AdminPhotos";
@@ -47,6 +48,7 @@ const App = () => (
             <Route path="/leadership" element={<Leadership />} />
             <Route path="/ministries" element={<MinistriesPage />} />
             <Route path="/newsletters" element={<NewslettersPage />} />
+            <Route path="/our-story" element={<OurStory />} />
             
             {/* Admin Routes */}
             <Route path="/admin/login" element={<AdminLogin />} />
