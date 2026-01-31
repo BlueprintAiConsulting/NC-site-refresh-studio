@@ -17,6 +17,7 @@ import { Contact } from "@/components/Contact";
 import { Footer } from "@/components/Footer";
 import { EmergencyAlert } from "@/components/EmergencyAlert";
 import { SocialMediaSection } from "@/components/sections/SocialMediaSection";
+import { EmergencyCancellationsSection } from "@/components/sections/EmergencyCancellationsSection";
 
 const Index = () => {
   return (
@@ -27,6 +28,7 @@ const Index = () => {
       <main id="main">
         <div id="top" />
         <Hero />
+        <EmergencyCancellationsSection />
         <About />
         <Worship />
         <Events />
