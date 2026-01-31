@@ -64,7 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         setIsAdmin(data?.role === 'admin');
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error checking admin role:', error);
       setIsAdmin(false);
     } finally {
@@ -85,10 +85,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         title: 'Success',
         description: 'Signed in successfully',
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: 'Error',
-        description: error.message || 'Failed to sign in',
+        description: error instanceof Error ? error.message : 'Failed to sign in',
         variant: 'destructive',
       });
       throw error;
@@ -104,10 +104,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         title: 'Success',
         description: 'Signed out successfully',
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: 'Error',
-        description: error.message || 'Failed to sign out',
+        description: error instanceof Error ? error.message : 'Failed to sign out',
         variant: 'destructive',
       });
       throw error;

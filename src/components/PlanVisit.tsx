@@ -47,11 +47,13 @@ export function PlanVisit() {
         title: "Message sent!",
         description: "Thank you for reaching out. We'll get back to you soon.",
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error submitting form:", error);
       toast({
         title: "Something went wrong",
-        description: `Please try again or contact us directly at ${siteConfig.church.contact.phone}.`,
+        description: error instanceof Error
+          ? error.message
+          : `Please try again or contact us directly at ${siteConfig.church.contact.phone}.`,
         variant: "destructive",
       });
     } finally {
