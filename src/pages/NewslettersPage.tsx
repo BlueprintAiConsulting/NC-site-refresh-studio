@@ -19,6 +19,17 @@ interface NewsletterDisplay {
   description?: string | null;
 }
 
+interface NewsletterRow {
+  id: string;
+  title: string;
+  month: string;
+  year: string;
+  date: string;
+  pdf_url: string;
+  featured: boolean | null;
+  description?: string | null;
+}
+
 export default function NewslettersPage() {
   const [newsletters, setNewsletters] = useState<NewsletterDisplay[]>(newslettersData.newsletters);
   const [loading, setLoading] = useState(true);
@@ -26,13 +37,14 @@ export default function NewslettersPage() {
   useEffect(() => {
     const fetchNewsletters = async () => {
       const { data, error } = await supabase
-        .from("newsletters" as any)
+        .from("newsletters" as never)
         .select("id, title, month, year, date, pdf_url, featured, description")
         .order("date", { ascending: false });
 
-      if (!error && data && data.length > 0) {
+      const rows = (data ?? []) as unknown as NewsletterRow[];
+      if (!error && rows.length > 0) {
         setNewsletters(
-          (data as any[]).map((item) => ({
+          rows.map((item) => ({
             id: item.id,
             title: item.title,
             month: item.month,

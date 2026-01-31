@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { uploadPhoto } from '@/lib/storage';
 import { Calendar, Clock, MapPin, Plus, Pencil, Trash2, ArrowLeft, Star, Loader2, Image as ImageIcon } from 'lucide-react';
@@ -45,6 +45,21 @@ interface EventFormState {
   imagePath: string;
 }
 
+interface EventPayload {
+  title: string;
+  description: string | null;
+  event_date: string;
+  start_time: string;
+  end_time: string | null;
+  location: string | null;
+  is_recurring: boolean;
+  recurring_pattern: string | null;
+  is_featured: boolean;
+  image_url: string | null;
+  image_path: string | null;
+  created_by?: string | null;
+}
+
 const defaultFormState: EventFormState = {
   title: '',
   description: '',
@@ -70,11 +85,7 @@ export default function AdminEvents() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  useEffect(() => {
-    void fetchEvents();
-  }, []);
-
-  const fetchEvents = async () => {
+  const fetchEvents = useCallback(async () => {
     setLoading(true);
     const { data, error } = await supabase
       .from('events')
@@ -94,7 +105,11 @@ export default function AdminEvents() {
     }
 
     setLoading(false);
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    void fetchEvents();
+  }, [fetchEvents]);
 
   const resetForm = () => {
     setFormState(defaultFormState);
@@ -127,7 +142,7 @@ export default function AdminEvents() {
 
     setSaving(true);
 
-    const payload = {
+    const payload: EventPayload = {
       title: formState.title.trim(),
       description: formState.description.trim() || null,
       event_date: formState.eventDate,
@@ -142,11 +157,11 @@ export default function AdminEvents() {
     };
 
     const { error } = editingId
-      ? await supabase.from('events').update(payload as any).eq('id', editingId)
+      ? await supabase.from('events').update(payload).eq('id', editingId)
       : await supabase.from('events').insert({
           ...payload,
           created_by: user?.id ?? null,
-        } as any);
+        } as EventPayload);
 
     if (error) {
       console.error('Event save error:', error);
@@ -213,11 +228,11 @@ export default function AdminEvents() {
         title: 'Image uploaded',
         description: 'The event image is ready to save with this event.',
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Event image upload error:', error);
       toast({
         title: 'Unable to upload image',
-        description: error?.message ?? 'Please try again.',
+        description: error instanceof Error ? error.message : 'Please try again.',
         variant: 'destructive',
       });
     } finally {

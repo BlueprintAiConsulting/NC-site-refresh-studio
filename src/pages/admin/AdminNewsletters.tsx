@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/useAuth';
 
 interface NewsletterRecord {
   id: string;
@@ -34,6 +34,18 @@ interface NewsletterRecord {
   pdf_url: string;
   pdf_path: string;
   featured: boolean;
+}
+
+interface NewsletterPayload {
+  title: string;
+  month: string;
+  year: string;
+  date: string;
+  description: string | null;
+  pdf_url: string;
+  pdf_path: string;
+  featured: boolean;
+  created_by?: string | null;
 }
 
 export default function AdminNewsletters() {
@@ -54,14 +66,10 @@ export default function AdminNewsletters() {
     featured: false,
   });
 
-  useEffect(() => {
-    void fetchNewsletters();
-  }, []);
-
-  const fetchNewsletters = async () => {
+  const fetchNewsletters = useCallback(async () => {
     setIsLoading(true);
     const { data, error } = await supabase
-      .from('newsletters' as any)
+      .from('newsletters' as never)
       .select('*')
       .order('date', { ascending: false });
 
@@ -77,7 +85,11 @@ export default function AdminNewsletters() {
     }
 
     setIsLoading(false);
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    void fetchNewsletters();
+  }, [fetchNewsletters]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -184,10 +196,13 @@ export default function AdminNewsletters() {
       }
 
       if (formData.featured) {
-        await supabase.from('newsletters' as any).update({ featured: false }).neq('id', editingId ?? '');
+        await supabase
+          .from('newsletters' as never)
+          .update({ featured: false })
+          .neq('id', editingId ?? '');
       }
 
-      const payload = {
+      const payload: NewsletterPayload = {
         title: formData.title.trim(),
         month: formData.month.trim(),
         year: formData.year.trim(),
@@ -200,8 +215,8 @@ export default function AdminNewsletters() {
       };
 
       const { error } = editingId
-        ? await supabase.from('newsletters' as any).update(payload).eq('id', editingId)
-        : await supabase.from('newsletters' as any).insert(payload);
+        ? await supabase.from('newsletters' as never).update(payload).eq('id', editingId)
+        : await supabase.from('newsletters' as never).insert(payload);
 
       if (error) throw error;
 
@@ -270,7 +285,7 @@ export default function AdminNewsletters() {
       }
 
       const { error: dbError } = await supabase
-        .from('newsletters' as any)
+        .from('newsletters' as never)
         .delete()
         .eq('id', newsletter.id);
 

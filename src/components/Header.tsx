@@ -58,12 +58,10 @@ const navItems: NavItem[] = [
       { href: "#gallery", label: "Gallery", isAnchor: true },
       { href: "#social", label: "Social Media", isAnchor: true },
       { href: "#plan", label: "Plan a Visit", isAnchor: true },
-      { href: "#give", label: "Give", isAnchor: true },
       { href: "#room-reservations", label: "Room Reservations", isAnchor: true },
       { href: "#contact", label: "Contact Us", isAnchor: true },
     ],
   },
-  { href: "#give", label: "Give", isAnchor: true },
   { href: "/newsletters", label: "Newsletters", isAnchor: false },
   { href: "#room-reservations", label: "Rooms", isAnchor: true },
   
