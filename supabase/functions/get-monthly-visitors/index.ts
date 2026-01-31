@@ -65,7 +65,7 @@ const handler = async (req: Request): Promise<Response> => {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error fetching GoatCounter stats:", error);
     return new Response(
       JSON.stringify({ error: "Failed to fetch analytics" }),

@@ -51,7 +51,12 @@ interface ContactFormRequest {
   message?: string;
 }
 
-async function checkRateLimit(supabase: any, ipAddress: string): Promise<{ allowed: boolean; remaining: number }> {
+type SupabaseClient = ReturnType<typeof createClient>;
+
+async function checkRateLimit(
+  supabase: SupabaseClient,
+  ipAddress: string
+): Promise<{ allowed: boolean; remaining: number }> {
   const windowStart = new Date(Date.now() - RATE_LIMIT_WINDOW_MINUTES * 60 * 1000).toISOString();
   
   // Count recent submissions from this IP
@@ -76,7 +81,7 @@ async function checkRateLimit(supabase: any, ipAddress: string): Promise<{ allow
   };
 }
 
-async function recordSubmission(supabase: any, ipAddress: string): Promise<void> {
+async function recordSubmission(supabase: SupabaseClient, ipAddress: string): Promise<void> {
   const { error } = await supabase
     .from('contact_rate_limits')
     .insert({ ip_address: ipAddress });
@@ -215,7 +220,7 @@ const handler = async (req: Request): Promise<Response> => {
         },
       }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error in send-contact-email function:", error);
     // Return generic error message - do not expose internal details
     return new Response(
