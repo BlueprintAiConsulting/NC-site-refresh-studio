@@ -44,7 +44,6 @@ export function Footer() {
               <a href="#plan" className="block text-slate-300 hover:text-white transition-colors">Plan a Visit</a>
               <a href="#ministries" className="block text-slate-300 hover:text-white transition-colors">Ministries</a>
               <a href="#watch" className="block text-slate-300 hover:text-white transition-colors">Watch</a>
-              <a href="#give" className="block text-slate-300 hover:text-white transition-colors">Give</a>
             </div>
           </div>
 
