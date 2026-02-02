@@ -39,6 +39,10 @@ const siteConfigSchema = z.object({
     enabled: z.boolean(),
     calendarId: z.string(),
   }),
+  heroImage: z.object({
+    url: z.string(),
+    alt: z.string().optional(),
+  }),
 });
 
 export type SiteConfig = z.infer<typeof siteConfigSchema>;

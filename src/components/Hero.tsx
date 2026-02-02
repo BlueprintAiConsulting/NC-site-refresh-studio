@@ -1,6 +1,6 @@
 import { MapPin, Clock, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
-import heroBg from "@/assets/hero-church-sunset.webp";
+// import heroBg from "@/assets/hero-church-sunset.webp";
 import siteConfig, { formatFullAddress } from "@/lib/siteConfig";
 
 export function Hero() {
@@ -14,8 +14,8 @@ export function Hero() {
       <div 
         className="absolute inset-0 bg-cover bg-no-repeat"
         style={{ 
-          backgroundImage: `url(${heroBg})`,
-          backgroundPosition: '55% 40%' // Slightly right of center, focused on building and pink sky
+          backgroundImage: `url(${siteConfig.heroImage.url})`,
+          backgroundPosition: '55% 40%'
         }}
         aria-hidden="true"
       />

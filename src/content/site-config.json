@@ -44,4 +44,9 @@
     "enabled": true,
     "calendarId": "your-calendar-id@group.calendar.google.com"
   }
+  ,
+  "heroImage": {
+    "url": "/public/hero-default.jpg",
+    "alt": "Welcome to New Creation Community Church"
+  }
 }
