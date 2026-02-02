@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import newslettersData from "@/content/newsletters.json";
 import { supabase } from "@/integrations/supabase/client";
+import { useGalleryImages } from "@/hooks/useGalleryImages";
+import siteConfig from "@/lib/siteConfig";
 
 interface NewsletterDisplay {
   id: string;
@@ -31,6 +33,8 @@ interface NewsletterRow {
 }
 
 export default function NewslettersPage() {
+  const { data: heroImages } = useGalleryImages("hero-newsletters");
+  const heroImageUrl = heroImages?.[0]?.src ?? siteConfig.heroImage.url;
   const [newsletters, setNewsletters] = useState<NewsletterDisplay[]>(newslettersData.newsletters);
   const [loading, setLoading] = useState(true);
 
@@ -73,23 +77,29 @@ export default function NewslettersPage() {
       <Header />
       <main className="min-h-screen">
         {/* Hero Section */}
-        <section className="relative bg-gradient-to-b from-primary/10 to-background py-20 md:py-28">
-          <div className="container mx-auto px-4 max-w-6xl">
+        <section className="relative py-20 md:py-28">
+          <div
+            className="absolute inset-0 bg-cover bg-center"
+            style={{ backgroundImage: `url(${heroImageUrl})` }}
+            aria-hidden="true"
+          />
+          <div className="absolute inset-0 bg-black/40" aria-hidden="true" />
+          <div className="container mx-auto px-4 max-w-6xl relative">
             <FadeIn>
               <Button
                 asChild
                 variant="ghost"
                 className="mb-6"
               >
-                <a href="/#newsletter" className="flex items-center gap-2">
+                <a href="/#newsletter" className="flex items-center gap-2 text-white">
                   <ArrowLeft className="h-4 w-4" />
                   Back to Home
                 </a>
               </Button>
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-semibold mb-6">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-semibold mb-6 text-white drop-shadow">
                 Newsletter Archive
               </h1>
-              <p className="text-xl text-muted-foreground max-w-3xl">
+              <p className="text-xl text-white/90 max-w-3xl">
                 Browse our collection of past newsletters to stay informed about church
                 activities, events, and community updates.
               </p>

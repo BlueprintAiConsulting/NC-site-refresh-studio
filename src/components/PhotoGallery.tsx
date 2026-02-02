@@ -60,7 +60,7 @@ export function PhotoGallery() {
 
   // Use database images or fallback
   const images = dbImages && dbImages.length > 0 ? dbImages : fallbackImages;
-  const visibleImages = images.filter((img) => img.category !== "hero");
+  const visibleImages = images.filter((img) => !img.category?.startsWith("hero"));
   
   // Extract unique categories
   const categories = ["All", ...new Set(visibleImages.map((img) => img.category))];

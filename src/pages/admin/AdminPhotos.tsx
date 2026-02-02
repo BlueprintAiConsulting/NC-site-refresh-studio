@@ -545,7 +545,7 @@ export default function AdminPhotos() {
                       value={category}
                       onValueChange={(value) => {
                         setCategory(value);
-                        if (value === 'hero') {
+                        if (value.startsWith('hero')) {
                           setCropAspect('1.7778');
                         }
                       }}
@@ -555,6 +555,10 @@ export default function AdminPhotos() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="hero">Hero (Homepage)</SelectItem>
+                        <SelectItem value="hero-leadership">Hero (Leadership)</SelectItem>
+                        <SelectItem value="hero-ministries">Hero (Ministries)</SelectItem>
+                        <SelectItem value="hero-newsletters">Hero (Newsletters)</SelectItem>
+                        <SelectItem value="hero-our-story">Hero (Our Story)</SelectItem>
                         <SelectItem value="gallery">General Gallery</SelectItem>
                         <SelectItem value="worship">Worship</SelectItem>
                         <SelectItem value="community">Community</SelectItem>
@@ -772,7 +776,7 @@ export default function AdminPhotos() {
                         value={galleryCategory}
                         onValueChange={(value) => {
                           setGalleryCategory(value);
-                          if (value === 'hero') {
+                          if (value.startsWith('hero')) {
                             setCropAspect('1.7778');
                           }
                         }}
@@ -782,6 +786,10 @@ export default function AdminPhotos() {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="hero">Hero (Homepage)</SelectItem>
+                          <SelectItem value="hero-leadership">Hero (Leadership)</SelectItem>
+                          <SelectItem value="hero-ministries">Hero (Ministries)</SelectItem>
+                          <SelectItem value="hero-newsletters">Hero (Newsletters)</SelectItem>
+                          <SelectItem value="hero-our-story">Hero (Our Story)</SelectItem>
                           <SelectItem value="gallery">General Gallery</SelectItem>
                           <SelectItem value="worship">Worship</SelectItem>
                           <SelectItem value="community">Community</SelectItem>

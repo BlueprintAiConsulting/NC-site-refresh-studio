@@ -79,6 +79,8 @@ function StaffCard({ member }: { member: StaffMember }) {
 }
 
 const Leadership = () => {
+  const { data: heroImages } = useGalleryImages("hero-leadership");
+  const heroImageUrl = heroImages?.[0]?.src ?? siteConfig.heroImage.url;
   const { data: pastorImages } = useGalleryImages("staff-pastor-blanca");
   const { data: marshaImages } = useGalleryImages("staff-marsha-snyder");
   const { data: mikeImages } = useGalleryImages("staff-mike-krall");
@@ -129,13 +131,19 @@ const Leadership = () => {
       <Header />
       <main id="main">
         {/* Hero section */}
-        <section className="py-16 md:py-24 border-b border-border">
-          <div className="container max-w-5xl mx-auto px-5">
+        <section className="relative py-16 md:py-24 border-b border-border">
+          <div
+            className="absolute inset-0 bg-cover bg-center"
+            style={{ backgroundImage: `url(${heroImageUrl})` }}
+            aria-hidden="true"
+          />
+          <div className="absolute inset-0 bg-black/40" aria-hidden="true" />
+          <div className="container max-w-5xl mx-auto px-5 relative">
             <motion.h1 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
-              className="text-4xl md:text-5xl font-semibold mb-6"
+              className="text-4xl md:text-5xl font-semibold mb-6 text-white drop-shadow"
             >
               Our Leadership
             </motion.h1>
@@ -143,7 +151,7 @@ const Leadership = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.1, ease: [0.25, 0.1, 0.25, 1] }}
-              className="text-lg text-muted-foreground max-w-2xl"
+              className="text-lg text-white/90 max-w-2xl"
             >
               Meet the dedicated team who serve and lead our church community. 
               We're here to walk alongside you in your faith journey.
