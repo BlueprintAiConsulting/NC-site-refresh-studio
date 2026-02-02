@@ -26,6 +26,9 @@ export function Hero() {
       />
       {/* Very light overlay - 10-15% opacity to preserve vibrancy */}
       <div className="absolute inset-0 bg-black/10" />
+      {/* Enhanced text scrim for better readability */}
+      <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-black/40 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/20" />
       
       <div className="container max-w-5xl mx-auto px-5 relative z-10 py-16 md:py-24">
         {/* Main content with text scrim for readability */}
@@ -35,13 +38,21 @@ export function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
-            className="bg-black/25 backdrop-blur-[2px] rounded-xl p-6 md:p-8 mb-6"
+            className="bg-black/35 backdrop-blur-[4px] rounded-xl p-6 md:p-8 mb-6 border border-white/10"
           >
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-semibold mb-4 text-white drop-shadow-lg">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-semibold mb-4 text-white drop-shadow-2xl"
+              style={{
+                textShadow: '0 0 30px rgba(0, 0, 0, 0.8), 0 2px 8px rgba(0, 0, 0, 0.6), 0 0 20px rgba(228, 0, 43, 0.3)'
+              }}
+            >
               You're welcome here.
             </h1>
             
-            <p className="text-lg md:text-xl text-white/90 max-w-xl leading-relaxed drop-shadow-md">
+            <p className="text-lg md:text-xl text-white/95 max-w-xl leading-relaxed drop-shadow-lg"
+              style={{
+                textShadow: '0 1px 4px rgba(0, 0, 0, 0.8), 0 0 15px rgba(0, 0, 0, 0.4)'
+              }}
+            >
               Join us this Sunday for worship. We're a community rooted in faith, 
               growing together, and open to all.
             </p>
@@ -55,8 +66,12 @@ export function Hero() {
             className="flex flex-col sm:flex-row gap-4 sm:gap-8 mb-8"
           >
             {featuredServices.map((service) => (
-              <div key={`${service.name}-${service.time}`} className="flex items-center gap-2 text-white drop-shadow-md">
-                <Clock className="w-4 h-4 text-white" />
+              <div key={`${service.name}-${service.time}`} className="flex items-center gap-2 text-white drop-shadow-lg font-medium"
+                style={{
+                  textShadow: '0 1px 3px rgba(0, 0, 0, 0.8)'
+                }}
+              >
+                <Clock className="w-4 h-4 text-white drop-shadow" />
                 <span>
                   <strong>{service.time}</strong> {service.name.replace(" Service", "")}
                 </span>
@@ -85,9 +100,12 @@ export function Hero() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-            className="flex items-start gap-2 text-sm text-white/90 drop-shadow-md"
+            className="flex items-start gap-2 text-sm text-white/95 drop-shadow-lg font-medium"
+            style={{
+              textShadow: '0 1px 3px rgba(0, 0, 0, 0.8)'
+            }}
           >
-            <MapPin className="w-4 h-4 mt-0.5 shrink-0" />
+            <MapPin className="w-4 h-4 mt-0.5 shrink-0 drop-shadow" />
             <span>{formatFullAddress()}</span>
           </motion.div>
         </div>
