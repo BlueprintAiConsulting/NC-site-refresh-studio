@@ -109,6 +109,20 @@ export function About() {
           </StaggerItem>
         </StaggerContainer>
 
+        <FadeIn delay={0.15}>
+          <div className="card-church">
+            <h3 className="text-2xl font-semibold mb-4">Our Story</h3>
+            <div className="space-y-4 text-muted-foreground text-base leading-relaxed">
+              <p>
+                Our mission and desire is to welcome and provide you with the support of our NCCC community of faith that will enable you to connect with God in the most meaningful way to impact your life and your family members’ lives. It is our prayer and our hope that you will be able to find this true Christian community of faith that truly “Connects Church & Home” here at NCCC as this is what we believe that we are all seeking in our lives.
+              </p>
+              <p>
+                We are a true community of faith, a Christian family of God that prays, struggles and celebrates victories together while supporting and helping one another in our church projects and growing in our faith together. At NCCC, we are constantly evolving and seeking to improve upon the many programs we have in place.
+              </p>
+            </div>
+          </div>
+        </FadeIn>
+
       </div>
     </section>
   );
