@@ -2,8 +2,13 @@ import { MapPin, Clock, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 // import heroBg from "@/assets/hero-church-sunset.webp";
 import siteConfig, { formatFullAddress } from "@/lib/siteConfig";
+import { useGalleryImages } from "@/hooks/useGalleryImages";
 
 export function Hero() {
+  const { data: heroImages } = useGalleryImages("hero");
+  const heroImage = heroImages?.[0];
+  const heroImageUrl = heroImage?.src ?? siteConfig.heroImage.url;
+  const heroImageAlt = heroImage?.alt ?? siteConfig.heroImage.alt ?? "";
   const featuredServices = siteConfig.serviceTimes.filter((service) =>
     service.name.toLowerCase().includes("service"),
   );
@@ -14,7 +19,7 @@ export function Hero() {
       <div 
         className="absolute inset-0 bg-cover bg-no-repeat"
         style={{ 
-          backgroundImage: `url(${siteConfig.heroImage.url})`,
+          backgroundImage: `url(${heroImageUrl})`,
           backgroundPosition: '55% 40%'
         }}
         aria-hidden="true"

@@ -46,6 +46,7 @@ interface GalleryImageRecord {
 const cropAspectOptions = [
   { label: 'Free', value: 'free' },
   { label: 'Square', value: '1' },
+  { label: 'Hero 16:9', value: '1.7778' },
   { label: 'Landscape 4:3', value: '1.3333' },
   { label: 'Portrait 3:4', value: '0.75' },
 ];
@@ -540,11 +541,20 @@ export default function AdminPhotos() {
                   {/* Category Selection */}
                   <div className="space-y-2">
                     <Label htmlFor="category">Category</Label>
-                    <Select value={category} onValueChange={setCategory}>
+                    <Select
+                      value={category}
+                      onValueChange={(value) => {
+                        setCategory(value);
+                        if (value === 'hero') {
+                          setCropAspect('1.7778');
+                        }
+                      }}
+                    >
                       <SelectTrigger id="category">
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="hero">Hero (Homepage)</SelectItem>
                         <SelectItem value="gallery">General Gallery</SelectItem>
                         <SelectItem value="worship">Worship</SelectItem>
                         <SelectItem value="community">Community</SelectItem>
@@ -758,11 +768,20 @@ export default function AdminPhotos() {
                     )}
                     <div className="max-w-xs">
                       <Label htmlFor="gallery-category">Category</Label>
-                      <Select value={galleryCategory} onValueChange={setGalleryCategory}>
+                      <Select
+                        value={galleryCategory}
+                        onValueChange={(value) => {
+                          setGalleryCategory(value);
+                          if (value === 'hero') {
+                            setCropAspect('1.7778');
+                          }
+                        }}
+                      >
                         <SelectTrigger id="gallery-category">
                           <SelectValue placeholder="Select category" />
                         </SelectTrigger>
                         <SelectContent>
+                          <SelectItem value="hero">Hero (Homepage)</SelectItem>
                           <SelectItem value="gallery">General Gallery</SelectItem>
                           <SelectItem value="worship">Worship</SelectItem>
                           <SelectItem value="community">Community</SelectItem>

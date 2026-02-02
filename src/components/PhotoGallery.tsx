@@ -60,14 +60,15 @@ export function PhotoGallery() {
 
   // Use database images or fallback
   const images = dbImages && dbImages.length > 0 ? dbImages : fallbackImages;
+  const visibleImages = images.filter((img) => img.category !== "hero");
   
   // Extract unique categories
-  const categories = ["All", ...new Set(images.map((img) => img.category))];
+  const categories = ["All", ...new Set(visibleImages.map((img) => img.category))];
 
   const filteredImages =
     activeCategory === "All"
-      ? images
-      : images.filter((img) => img.category === activeCategory);
+      ? visibleImages
+      : visibleImages.filter((img) => img.category === activeCategory);
 
   return (
     <section id="gallery" className="section-padding bg-secondary/30">
