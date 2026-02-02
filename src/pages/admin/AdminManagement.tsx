@@ -20,6 +20,8 @@ interface AdminUser {
 export default function AdminManagement() {
   const { toast } = useToast();
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [sendInvite, setSendInvite] = useState(true);
   const [admins, setAdmins] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
@@ -28,27 +30,10 @@ export default function AdminManagement() {
   useEffect(() => {
     const loadAdmins = async () => {
       try {
-        const { data, error } = await supabase
-          .from("user_roles")
-          .select("id, user_id, created_at")
-          .eq("role", "admin");
+        const { data, error } = await supabase.functions.invoke("list-admins");
 
         if (error) throw error;
-
-        // Fetch user emails from auth
-        const adminsWithEmail: AdminUser[] = [];
-        for (const admin of data || []) {
-          const { data: authUser } = await supabase.auth.admin.getUserById(admin.user_id);
-          if (authUser?.user?.email) {
-            adminsWithEmail.push({
-              id: admin.id,
-              user_id: admin.user_id,
-              email: authUser.user.email,
-              created_at: admin.created_at,
-            });
-          }
-        }
-        setAdmins(adminsWithEmail);
+        setAdmins(data?.admins ?? []);
       } catch (err) {
         console.error("Failed to load admins:", err);
         toast({
@@ -77,66 +62,26 @@ export default function AdminManagement() {
     }
 
     setAdding(true);
+    const normalizedEmail = email.trim().toLowerCase();
     try {
-      // 1. Create user in auth if doesn't exist
-      const { data: existingUser, error: fetchError } = await supabase.auth.admin.getUserByEmail(
-        email
-      );
-
-      let userId: string;
-
-      if (existingUser?.user) {
-        userId = existingUser.user.id;
-      } else {
-        // Create new user
-        const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
-          email,
-          email_confirm: true,
-          password: Math.random().toString(36).slice(-16), // Random password
-        });
-
-        if (createError) throw createError;
-        if (!newUser?.user?.id) throw new Error("Failed to create user");
-        userId = newUser.user.id;
-      }
-
-      // 2. Check if already admin
-      const { data: existingRole } = await supabase
-        .from("user_roles")
-        .select("id")
-        .eq("user_id", userId)
-        .eq("role", "admin")
-        .single();
-
-      if (existingRole) {
-        toast({
-          title: "Already an admin",
-          description: `${email} is already an admin`,
-        });
-        return;
-      }
-
-      // 3. Add admin role
-      const { error: roleError } = await supabase.from("user_roles").insert({
-        user_id: userId,
-        role: "admin",
+      const { data, error } = await supabase.functions.invoke("add-admin", {
+        body: {
+          email: normalizedEmail,
+          password: password.trim() || null,
+          sendInvite: password.trim() ? false : sendInvite,
+        },
       });
 
-      if (roleError) throw roleError;
+      if (error) throw error;
 
-      // 4. Refresh admin list
-      const newAdmin: AdminUser = {
-        id: crypto.randomUUID(),
-        user_id: userId,
-        email,
-        created_at: new Date().toISOString(),
-      };
-      setAdmins((prev) => [...prev, newAdmin]);
       setEmail("");
+      setPassword("");
+      const { data: adminsData } = await supabase.functions.invoke("list-admins");
+      setAdmins(adminsData?.admins ?? []);
 
       toast({
         title: "Admin added",
-        description: `${email} is now an admin`,
+        description: data?.message ?? `${normalizedEmail} is now an admin`,
       });
     } catch (err) {
       console.error("Error adding admin:", err);
@@ -226,6 +171,31 @@ export default function AdminManagement() {
                       )}
                     </Button>
                   </div>
+                </div>
+                <div>
+                  <Label htmlFor="password">Set Password (optional)</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Leave blank to send invite email"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    disabled={adding}
+                  />
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Leave blank to send an invite email so the user can set their own password.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    id="sendInvite"
+                    type="checkbox"
+                    className="h-4 w-4"
+                    checked={sendInvite}
+                    onChange={(e) => setSendInvite(e.target.checked)}
+                    disabled={adding || Boolean(password.trim())}
+                  />
+                  <Label htmlFor="sendInvite">Send invite email</Label>
                 </div>
               </form>
             </CardContent>
