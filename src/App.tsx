@@ -17,6 +17,7 @@ import AdminPhotos from "./pages/admin/AdminPhotos";
 import AdminNewsletters from "./pages/admin/AdminNewsletters";
 import AdminEvents from "./pages/admin/AdminEvents";
 import AdminSettings from "./pages/admin/AdminSettings";
+import AdminManagement from "./pages/admin/AdminManagement";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -82,6 +83,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <AdminEvents />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/management"
+              element={
+                <ProtectedRoute>
+                  <AdminManagement />
                 </ProtectedRoute>
               }
             />

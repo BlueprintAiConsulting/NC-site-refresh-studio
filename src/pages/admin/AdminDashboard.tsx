@@ -11,7 +11,8 @@ import {
   Calendar,
   BarChart3,
   Settings,
-  FileText
+  FileText,
+  Users
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useCalendarEvents } from '@/hooks/useCalendarEvents';
@@ -93,6 +94,13 @@ export default function AdminDashboard() {
       icon: Settings,
       href: '/admin/settings',
       color: 'bg-gray-500/10 text-gray-600',
+    },
+    {
+      title: 'Admin Management',
+      description: 'Add and manage admin users',
+      icon: Users,
+      href: '/admin/management',
+      color: 'bg-purple-500/10 text-purple-600',
     },
   ];
 
