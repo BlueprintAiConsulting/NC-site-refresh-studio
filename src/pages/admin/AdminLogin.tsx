@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/useAuth';
 import { Button } from '@/components/ui/button';
@@ -7,19 +7,97 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Lock, Mail, Loader2 } from 'lucide-react';
 import churchLogo from '@/assets/church-logo.png';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function AdminLogin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [mode, setMode] = useState<'signin' | 'signup'>('signin');
+  const [inviteVerified, setInviteVerified] = useState(false);
+  const [inviteError, setInviteError] = useState<string | null>(null);
+  const [inviteChecking, setInviteChecking] = useState(false);
   const { signIn } = useAuth();
   const navigate = useNavigate();
+  const inviteAccessToken = useMemo(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('access_token');
+  }, []);
+  const inviteRefreshToken = useMemo(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('refresh_token');
+  }, []);
+  const inviteTokenHash = useMemo(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('token_hash');
+  }, []);
+  const inviteType = useMemo(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('type');
+  }, []);
+  const hasInviteToken = Boolean(inviteTokenHash || inviteAccessToken);
+
+  useEffect(() => {
+    if (inviteAccessToken && inviteRefreshToken) {
+      setInviteChecking(true);
+      supabase.auth
+        .setSession({ access_token: inviteAccessToken, refresh_token: inviteRefreshToken })
+        .then(({ error }) => {
+          if (error) {
+            console.error('Invite session error:', error);
+            setInviteError('This invite link is no longer valid. Request a new invite.');
+            return;
+          }
+          setInviteVerified(true);
+        })
+        .catch((error) => {
+          console.error('Invite session error:', error);
+          setInviteError('This invite link is no longer valid. Request a new invite.');
+        })
+        .finally(() => {
+          setInviteChecking(false);
+        });
+      return;
+    }
+
+    if (inviteType === 'invite' && inviteTokenHash) {
+      setInviteChecking(true);
+      supabase.auth
+        .verifyOtp({ type: 'invite', token_hash: inviteTokenHash })
+        .then(({ error }) => {
+          if (error) {
+            console.error('Invite verification error:', error);
+            setInviteError('This invite link is no longer valid. Request a new invite.');
+            return;
+          }
+          setInviteVerified(true);
+        })
+        .catch((error) => {
+          console.error('Invite verification error:', error);
+          setInviteError('This invite link is no longer valid. Request a new invite.');
+        })
+        .finally(() => {
+          setInviteChecking(false);
+        });
+    }
+  }, [inviteAccessToken, inviteRefreshToken, inviteTokenHash, inviteType]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
+      if (mode === 'signup') {
+        if (!inviteVerified) {
+          throw new Error('Invite required. Use your invite link to set a password.');
+        }
+
+        const { error } = await supabase.auth.updateUser({ password });
+        if (error) throw error;
+
+        navigate('/admin/dashboard');
+        return;
+      }
       await signIn(email, password);
       navigate('/admin/dashboard');
     } catch (error) {
@@ -34,19 +112,32 @@ export default function AdminLogin() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <img src={churchLogo} alt="New Creation Community Church" className="w-20 h-20 mx-auto mb-4" />
-          <h1 className="text-2xl font-semibold">Admin Login</h1>
+          <h1 className="text-2xl font-semibold">Admin Access</h1>
           <p className="text-muted-foreground">New Creation Community Church</p>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>Sign In</CardTitle>
+            <CardTitle>{mode === 'signin' ? 'Sign In' : 'Sign Up'}</CardTitle>
             <CardDescription>
-              Enter your credentials to access the admin dashboard
+              {mode === 'signin'
+                ? 'Enter your credentials to access the admin dashboard'
+                : 'Use your invite email to create your admin account'}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
+              {mode === 'signup' ? (
+                <div className="rounded-md border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+                  {inviteError
+                    ? inviteError
+                    : inviteChecking
+                      ? 'Checking invite link...'
+                      : inviteVerified || inviteAccessToken
+                      ? 'Invite verified. Set a password to finish creating your admin account.'
+                      : 'Use your invite link to verify access before setting a password.'}
+                </div>
+              ) : null}
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <div className="relative">
@@ -79,17 +170,46 @@ export default function AdminLogin() {
                 </div>
               </div>
 
-              <Button type="submit" className="w-full" disabled={loading}>
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={loading || (mode === 'signup' && !hasInviteToken)}
+              >
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Signing in...
+                    {mode === 'signin' ? 'Signing in...' : 'Creating account...'}
                   </>
                 ) : (
-                  'Sign In'
+                  mode === 'signin' ? 'Sign In' : 'Create Account'
                 )}
               </Button>
             </form>
+            <div className="mt-4 text-center text-sm text-muted-foreground">
+              {mode === 'signin' ? (
+                <>
+                  Invited admin?{' '}
+                  <button
+                    type="button"
+                    className="text-primary hover:underline"
+                    onClick={() => setMode('signup')}
+                  >
+                    Create your account
+                  </button>
+                </>
+              ) : (
+                <>
+                  Already have an account?{' '}
+                  <button
+                    type="button"
+                    className="text-primary hover:underline"
+                    onClick={() => setMode('signin')}
+                  >
+                    Sign in
+                  </button>
+                </>
+              )}
+            </div>
           </CardContent>
         </Card>
 
