@@ -93,6 +93,11 @@ export default function AdminManagement() {
           normalizedMessage.includes("failed to fetch") ||
           normalizedMessage.includes("networkerror") ||
           functionsError.name === "FunctionsFetchError";
+        const message = (error as Error).message ?? "";
+        const isEdgeUnavailable =
+          message.includes("Failed to send a request to the Edge Function") ||
+          message.includes("Failed to fetch") ||
+          message.includes("NetworkError");
 
         if (!isEdgeUnavailable) {
           throw error;
@@ -129,6 +134,12 @@ export default function AdminManagement() {
         setEmail("");
         setPassword("");
         await loadAdminsWithFallback();
+        if (fallbackError) throw fallbackError;
+
+        setEmail("");
+        setPassword("");
+        const { data: adminsData } = await supabase.functions.invoke("list-admins");
+        setAdmins(adminsData?.admins ?? []);
 
         toast({
           title: "Admin added",
