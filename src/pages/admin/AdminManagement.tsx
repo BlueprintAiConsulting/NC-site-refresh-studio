@@ -26,14 +26,24 @@ export default function AdminManagement() {
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
 
+  const loadAdminsWithFallback = async () => {
+    const { data, error } = await supabase.functions.invoke("list-admins");
+    if (!error) {
+      setAdmins(data?.admins ?? []);
+      return;
+    }
+
+    const { data: rpcData, error: rpcError } = await supabase.rpc("list_admins_with_emails");
+    if (rpcError) throw rpcError;
+
+    setAdmins((rpcData ?? []) as AdminUser[]);
+  };
+
   // Load current admins
   useEffect(() => {
     const loadAdmins = async () => {
       try {
-        const { data, error } = await supabase.functions.invoke("list-admins");
-
-        if (error) throw error;
-        setAdmins(data?.admins ?? []);
+        await loadAdminsWithFallback();
       } catch (err) {
         console.error("Failed to load admins:", err);
         toast({
@@ -73,6 +83,16 @@ export default function AdminManagement() {
       });
 
       if (error) {
+        const functionsError = error as Error & { name?: string };
+        const message = functionsError.message ?? "";
+        const normalizedMessage = message.toLowerCase();
+        const isEdgeUnavailable =
+          normalizedMessage.includes("edge function") ||
+          normalizedMessage.includes("failed to send a request to edge function") ||
+          normalizedMessage.includes("failed to send a request to the edge function") ||
+          normalizedMessage.includes("failed to fetch") ||
+          normalizedMessage.includes("networkerror") ||
+          functionsError.name === "FunctionsFetchError";
         const message = (error as Error).message ?? "";
         const isEdgeUnavailable =
           message.includes("Failed to send a request to the Edge Function") ||
@@ -96,6 +116,24 @@ export default function AdminManagement() {
           },
         );
 
+        if (fallbackError) {
+          const fallbackMessage = (fallbackError as Error).message ?? "";
+          const isMissingFallbackRpc = fallbackMessage.includes(
+            "Could not find the function public.promote_existing_user_to_admin",
+          );
+
+          if (isMissingFallbackRpc) {
+            throw new Error(
+              "Fallback admin promotion is not deployed yet. Run the latest Supabase migrations, then try again.",
+            );
+          }
+
+          throw fallbackError;
+        }
+
+        setEmail("");
+        setPassword("");
+        await loadAdminsWithFallback();
         if (fallbackError) throw fallbackError;
 
         setEmail("");
@@ -113,18 +151,28 @@ export default function AdminManagement() {
 
       setEmail("");
       setPassword("");
-      const { data: adminsData } = await supabase.functions.invoke("list-admins");
-      setAdmins(adminsData?.admins ?? []);
+      await loadAdminsWithFallback();
 
       toast({
         title: "Admin added",
         description: data?.message ?? `${normalizedEmail} is now an admin`,
       });
     } catch (err) {
+      const message = (err as Error).message ?? "";
+      const normalizedMessage = message.toLowerCase();
+      const isEdgeUnavailable =
+        normalizedMessage.includes("edge function") ||
+        normalizedMessage.includes("failed to fetch") ||
+        normalizedMessage.includes("networkerror");
+
+      const description = isEdgeUnavailable
+        ? "Could not reach Supabase Edge Functions. If this persists, deploy latest Supabase migrations and ensure edge functions are deployed."
+        : (err as Error).message || "Please try again";
+
       console.error("Error adding admin:", err);
       toast({
         title: "Failed to add admin",
-        description: (err as Error).message || "Please try again",
+        description,
         variant: "destructive",
       });
     } finally {
