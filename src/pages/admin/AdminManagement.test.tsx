@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   insertMock: vi.fn(),
   selectMock: vi.fn(),
   invokeMock: vi.fn(),
+  rpcMock: vi.fn(),
 }));
 
 vi.mock("@/hooks/use-toast", () => ({
@@ -36,6 +37,7 @@ vi.mock("@/integrations/supabase/client", () => ({
     functions: {
       invoke: mocks.invokeMock,
     },
+    rpc: mocks.rpcMock,
     from: vi.fn(() => ({
       select: mocks.selectMock,
       insert: mocks.insertMock,
@@ -50,6 +52,7 @@ describe("AdminManagement", () => {
     mocks.listUsersMock.mockReset();
     mocks.createUserMock.mockReset();
     mocks.invokeMock.mockReset();
+    mocks.rpcMock.mockReset();
 
     mocks.selectMock.mockImplementation((selectArg: string) => {
       if (selectArg === "id, user_id, created_at") {
@@ -100,6 +103,47 @@ describe("AdminManagement", () => {
           password: null,
           sendInvite: true,
         },
+      });
+    });
+  });
+
+  it("falls back to rpc when edge function is unreachable", async () => {
+    mocks.invokeMock.mockImplementation((functionName: string) => {
+      if (functionName === "list-admins") {
+        return Promise.resolve({ data: { admins: [] }, error: null });
+      }
+
+      if (functionName === "add-admin") {
+        return Promise.resolve({
+          data: null,
+          error: new Error("Failed to send a request to the Edge Function"),
+        });
+      }
+
+      return Promise.resolve({ data: null, error: null });
+    });
+
+    mocks.rpcMock.mockResolvedValue({
+      data: "newadmin@example.com is now an admin.",
+      error: null,
+    });
+
+    const { default: AdminManagement } = await import("./AdminManagement");
+
+    render(
+      <MemoryRouter>
+        <AdminManagement />
+      </MemoryRouter>
+    );
+
+    fireEvent.change(screen.getByLabelText(/email address/i), {
+      target: { value: "NewAdmin@example.com" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /add admin/i }));
+
+    await waitFor(() => {
+      expect(mocks.rpcMock).toHaveBeenCalledWith("promote_existing_user_to_admin", {
+        target_email: "newadmin@example.com",
       });
     });
   });

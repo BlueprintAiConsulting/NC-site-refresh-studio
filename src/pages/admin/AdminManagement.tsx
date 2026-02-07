@@ -72,7 +72,44 @@ export default function AdminManagement() {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        const message = (error as Error).message ?? "";
+        const isEdgeUnavailable =
+          message.includes("Failed to send a request to the Edge Function") ||
+          message.includes("Failed to fetch") ||
+          message.includes("NetworkError");
+
+        if (!isEdgeUnavailable) {
+          throw error;
+        }
+
+        if (password.trim()) {
+          throw new Error(
+            "Edge functions are currently unavailable, so password-based admin creation cannot run. Leave password blank and add an existing signed-up user instead.",
+          );
+        }
+
+        const { data: fallbackMessage, error: fallbackError } = await supabase.rpc(
+          "promote_existing_user_to_admin",
+          {
+            target_email: normalizedEmail,
+          },
+        );
+
+        if (fallbackError) throw fallbackError;
+
+        setEmail("");
+        setPassword("");
+        const { data: adminsData } = await supabase.functions.invoke("list-admins");
+        setAdmins(adminsData?.admins ?? []);
+
+        toast({
+          title: "Admin added",
+          description: fallbackMessage ?? `${normalizedEmail} is now an admin`,
+        });
+
+        return;
+      }
 
       setEmail("");
       setPassword("");
