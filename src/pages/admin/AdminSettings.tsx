@@ -16,8 +16,9 @@ export default function AdminSettings() {
       });
       if (!res.ok) throw new Error("Failed to update site-config.json");
       setMessage("Hero image updated successfully!");
-    } catch (err: any) {
-      setMessage("Error: " + err.message);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "Unknown error";
+      setMessage("Error: " + errorMessage);
     }
   };
 
