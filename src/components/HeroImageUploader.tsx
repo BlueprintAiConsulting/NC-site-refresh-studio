@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import Cropper from "react-easy-crop";
+import Cropper, { type Area } from "react-easy-crop";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import getCroppedImg from "@/lib/cropImage";
@@ -13,11 +13,11 @@ export function HeroImageUploader({ initialUrl, onUpload }: HeroImageUploaderPro
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
-  const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
   const [uploading, setUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(initialUrl);
 
-  const onCropComplete = useCallback((_, croppedAreaPixels) => {
+  const onCropComplete = useCallback((_croppedArea: Area, croppedAreaPixels: Area) => {
     setCroppedAreaPixels(croppedAreaPixels);
   }, []);
 
