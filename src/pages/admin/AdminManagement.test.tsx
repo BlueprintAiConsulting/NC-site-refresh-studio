@@ -8,11 +8,13 @@ const mocks = vi.hoisted(() => ({
   insertMock: vi.fn(),
   selectMock: vi.fn(),
   invokeMock: vi.fn(),
+  rpcMock: vi.fn(),
+  toastMock: vi.fn(),
 }));
 
 vi.mock("@/hooks/use-toast", () => ({
   useToast: () => ({
-    toast: vi.fn(),
+    toast: mocks.toastMock,
   }),
 }));
 
@@ -36,6 +38,7 @@ vi.mock("@/integrations/supabase/client", () => ({
     functions: {
       invoke: mocks.invokeMock,
     },
+    rpc: mocks.rpcMock,
     from: vi.fn(() => ({
       select: mocks.selectMock,
       insert: mocks.insertMock,
@@ -50,6 +53,8 @@ describe("AdminManagement", () => {
     mocks.listUsersMock.mockReset();
     mocks.createUserMock.mockReset();
     mocks.invokeMock.mockReset();
+    mocks.rpcMock.mockReset();
+    mocks.toastMock.mockReset();
 
     mocks.selectMock.mockImplementation((selectArg: string) => {
       if (selectArg === "id, user_id, created_at") {
@@ -102,5 +107,179 @@ describe("AdminManagement", () => {
         },
       });
     });
+  });
+
+  it("falls back to rpc when edge function is unreachable", async () => {
+    mocks.invokeMock.mockImplementation((functionName: string) => {
+      if (functionName === "list-admins") {
+        return Promise.resolve({ data: { admins: [] }, error: null });
+      }
+
+      if (functionName === "add-admin") {
+        return Promise.resolve({
+          data: null,
+          error: new Error("Failed to send a request to the Edge Function"),
+        });
+      }
+
+      return Promise.resolve({ data: null, error: null });
+    });
+
+    mocks.rpcMock.mockResolvedValue({
+      data: "newadmin@example.com is now an admin.",
+      error: null,
+    });
+
+    const { default: AdminManagement } = await import("./AdminManagement");
+
+    render(
+      <MemoryRouter>
+        <AdminManagement />
+      </MemoryRouter>
+    );
+
+    fireEvent.change(screen.getByLabelText(/email address/i), {
+      target: { value: "NewAdmin@example.com" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /add admin/i }));
+
+    await waitFor(() => {
+      expect(mocks.rpcMock).toHaveBeenCalledWith("promote_existing_user_to_admin", {
+        target_email: "newadmin@example.com",
+      });
+    });
+  });
+
+  it("shows actionable message when fallback rpc is not deployed", async () => {
+    mocks.invokeMock.mockImplementation((functionName: string) => {
+      if (functionName === "list-admins") {
+        return Promise.resolve({ data: { admins: [] }, error: null });
+      }
+
+      if (functionName === "add-admin") {
+        return Promise.resolve({
+          data: null,
+          error: new Error("Failed to send a request to the Edge Function"),
+        });
+      }
+
+      return Promise.resolve({ data: null, error: null });
+    });
+
+    mocks.rpcMock.mockResolvedValue({
+      data: null,
+      error: new Error(
+        "Could not find the function public.promote_existing_user_to_admin(target_email) in the schema cache",
+      ),
+    });
+
+    const { default: AdminManagement } = await import("./AdminManagement");
+
+    render(
+      <MemoryRouter>
+        <AdminManagement />
+      </MemoryRouter>
+    );
+
+    fireEvent.change(screen.getByLabelText(/email address/i), {
+      target: { value: "newadmin@example.com" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /add admin/i }));
+
+    await waitFor(() => {
+      expect(mocks.toastMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: "Failed to add admin",
+          description:
+            "Fallback admin promotion is not deployed yet. Run the latest Supabase migrations, then try again.",
+        }),
+      );
+    });
+  });
+
+  it("falls back to rpc for lowercase edge-function transport errors", async () => {
+    mocks.invokeMock.mockImplementation((functionName: string) => {
+      if (functionName === "list-admins") {
+        return Promise.resolve({ data: { admins: [] }, error: null });
+      }
+
+      if (functionName === "add-admin") {
+        return Promise.resolve({
+          data: null,
+          error: new Error("Failed to send a request to edge function"),
+        });
+      }
+
+      return Promise.resolve({ data: null, error: null });
+    });
+
+    mocks.rpcMock.mockResolvedValue({
+      data: "newadmin@example.com is now an admin.",
+      error: null,
+    });
+
+    const { default: AdminManagement } = await import("./AdminManagement");
+
+    render(
+      <MemoryRouter>
+        <AdminManagement />
+      </MemoryRouter>
+    );
+
+    fireEvent.change(screen.getByLabelText(/email address/i), {
+      target: { value: "newadmin@example.com" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /add admin/i }));
+
+    await waitFor(() => {
+      expect(mocks.rpcMock).toHaveBeenCalledWith("promote_existing_user_to_admin", {
+        target_email: "newadmin@example.com",
+      });
+    });
+  });
+
+  it("loads admins via rpc when list-admins edge function is unavailable", async () => {
+    mocks.invokeMock.mockImplementation((functionName: string) => {
+      if (functionName === "list-admins") {
+        return Promise.resolve({
+          data: null,
+          error: new Error("Failed to send a request to edge function"),
+        });
+      }
+
+      return Promise.resolve({ data: null, error: null });
+    });
+
+    mocks.rpcMock.mockImplementation((rpcName: string) => {
+      if (rpcName === "list_admins_with_emails") {
+        return Promise.resolve({
+          data: [
+            {
+              id: "1",
+              user_id: "u1",
+              email: "admin@example.com",
+              created_at: new Date().toISOString(),
+            },
+          ],
+          error: null,
+        });
+      }
+
+      return Promise.resolve({ data: null, error: null });
+    });
+
+    const { default: AdminManagement } = await import("./AdminManagement");
+
+    render(
+      <MemoryRouter>
+        <AdminManagement />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(mocks.rpcMock).toHaveBeenCalledWith("list_admins_with_emails");
+    });
+
+    expect(screen.getByText("admin@example.com")).toBeInTheDocument();
   });
 });
