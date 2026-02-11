@@ -29,16 +29,21 @@ export default function AdminManagement() {
   const edgeFunctionTroubleshooting =
     "Could not reach Supabase Edge Functions. Confirm the add-admin function is deployed, your VITE_SUPABASE_URL and publishable key match the live project, and Supabase Auth SMTP settings are configured in the dashboard.";
 
+  const edgeFunctionTransportIndicators = [
+    "edge function",
+    "failed to send a request to edge function",
+    "failed to send a request to the edge function",
+    "failed to fetch",
+    "networkerror",
+  ];
+
   const isEdgeFunctionTransportError = (err: Error & { name?: string }) => {
-    const message = (err.message ?? "").toLowerCase();
-    return (
-      message.includes("edge function") ||
-      message.includes("failed to send a request to edge function") ||
-      message.includes("failed to send a request to the edge function") ||
-      message.includes("failed to fetch") ||
-      message.includes("networkerror") ||
-      err.name === "FunctionsFetchError"
-    );
+    if (err.name === "FunctionsFetchError") {
+      return true;
+    }
+
+    const normalizedMessage = (err.message ?? "").toLowerCase();
+    return edgeFunctionTransportIndicators.some((indicator) => normalizedMessage.includes(indicator));
   };
 
   const loadAdminsWithFallback = async () => {

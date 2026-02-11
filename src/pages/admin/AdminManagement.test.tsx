@@ -197,6 +197,47 @@ describe("AdminManagement", () => {
     });
   });
 
+
+  it("falls back to rpc for FunctionsFetchError responses", async () => {
+    mocks.invokeMock.mockImplementation((functionName: string) => {
+      if (functionName === "list-admins") {
+        return Promise.resolve({ data: { admins: [] }, error: null });
+      }
+
+      if (functionName === "add-admin") {
+        const error = new Error("Unexpected transport issue") as Error & { name?: string };
+        error.name = "FunctionsFetchError";
+        return Promise.resolve({ data: null, error });
+      }
+
+      return Promise.resolve({ data: null, error: null });
+    });
+
+    mocks.rpcMock.mockResolvedValue({
+      data: "newadmin@example.com is now an admin.",
+      error: null,
+    });
+
+    const { default: AdminManagement } = await import("./AdminManagement");
+
+    render(
+      <MemoryRouter>
+        <AdminManagement />
+      </MemoryRouter>
+    );
+
+    fireEvent.change(screen.getByLabelText(/email address/i), {
+      target: { value: "newadmin@example.com" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /add admin/i }));
+
+    await waitFor(() => {
+      expect(mocks.rpcMock).toHaveBeenCalledWith("promote_existing_user_to_admin", {
+        target_email: "newadmin@example.com",
+      });
+    });
+  });
+
   it("falls back to rpc for lowercase edge-function transport errors", async () => {
     mocks.invokeMock.mockImplementation((functionName: string) => {
       if (functionName === "list-admins") {
