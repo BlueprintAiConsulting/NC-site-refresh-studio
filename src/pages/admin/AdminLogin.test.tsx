@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => ({
   navigateMock: vi.fn(),
   setSessionMock: vi.fn(),
   verifyOtpMock: vi.fn(),
+  exchangeCodeForSessionMock: vi.fn(),
   updateUserMock: vi.fn(),
 }));
 
@@ -26,6 +27,7 @@ vi.mock("@/integrations/supabase/client", () => ({
     auth: {
       setSession: mocks.setSessionMock,
       verifyOtp: mocks.verifyOtpMock,
+      exchangeCodeForSession: mocks.exchangeCodeForSessionMock,
       updateUser: mocks.updateUserMock,
     },
   },
@@ -37,10 +39,12 @@ describe("AdminLogin invite links", () => {
     mocks.navigateMock.mockReset();
     mocks.setSessionMock.mockReset();
     mocks.verifyOtpMock.mockReset();
+    mocks.exchangeCodeForSessionMock.mockReset();
     mocks.updateUserMock.mockReset();
 
     mocks.setSessionMock.mockResolvedValue({ error: null });
     mocks.verifyOtpMock.mockResolvedValue({ error: null });
+    mocks.exchangeCodeForSessionMock.mockResolvedValue({ error: null });
     mocks.updateUserMock.mockResolvedValue({ error: null });
 
     window.history.replaceState({}, "", "/admin/login");
@@ -89,4 +93,22 @@ describe("AdminLogin invite links", () => {
       expect(screen.getByRole("button", { name: /create account/i })).toBeEnabled();
     });
   });
+
+  it("reads invite code links and exchanges session", async () => {
+    window.history.replaceState({}, "", "/admin/login?code=pkce-code&type=invite");
+
+    const { default: AdminLogin } = await import("./AdminLogin");
+    render(<AdminLogin />);
+
+    fireEvent.click(screen.getByRole("button", { name: /create your account/i }));
+
+    await waitFor(() => {
+      expect(mocks.exchangeCodeForSessionMock).toHaveBeenCalledWith("pkce-code");
+    });
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /create account/i })).toBeEnabled();
+    });
+  });
+
 });
