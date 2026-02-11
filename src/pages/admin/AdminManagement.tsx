@@ -26,6 +26,9 @@ export default function AdminManagement() {
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
 
+  const edgeFunctionTroubleshooting =
+    "Could not reach Supabase Edge Functions. Confirm the add-admin function is deployed, your VITE_SUPABASE_URL and publishable key match the live project, and Supabase Auth SMTP settings are configured in the dashboard.";
+
   const loadAdminsWithFallback = async () => {
     const { data, error } = await supabase.functions.invoke("list-admins");
     if (!error) {
@@ -155,7 +158,7 @@ export default function AdminManagement() {
         normalizedMessage.includes("networkerror");
 
       const description = isEdgeUnavailable
-        ? "Could not reach Supabase Edge Functions. If this persists, deploy latest Supabase migrations and ensure edge functions are deployed."
+        ? edgeFunctionTroubleshooting
         : (err as Error).message || "Please try again";
 
       console.error("Error adding admin:", err);
