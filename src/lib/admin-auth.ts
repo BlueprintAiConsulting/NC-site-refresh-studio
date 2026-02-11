@@ -99,6 +99,31 @@ export const removeLocalAdminAccount = (email: string): boolean => {
   return true;
 };
 
+export const resetLocalAdminPassword = (email: string, nextPassword: string): boolean => {
+  const normalizedEmail = normalizeEmail(email);
+  const trimmedPassword = nextPassword.trim();
+  const configured = getConfiguredAdmin();
+
+  if (!trimmedPassword || configured?.email === normalizedEmail) {
+    return false;
+  }
+
+  const localAccounts = readLocalAccounts();
+  const existingIndex = localAccounts.findIndex((account) => account.email === normalizedEmail);
+
+  if (existingIndex < 0) {
+    return false;
+  }
+
+  localAccounts[existingIndex] = {
+    ...localAccounts[existingIndex],
+    password: trimmedPassword,
+  };
+
+  persistLocalAccounts(localAccounts);
+  return true;
+};
+
 export const validateAdminCredentials = (email: string, password: string): AdminAccount | null => {
   const normalizedEmail = normalizeEmail(email);
   return listAdminAccounts().find(
