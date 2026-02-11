@@ -8,12 +8,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Trash2, Plus, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/useAuth";
 import {
   addLocalAdminAccount,
+  canAdminResetPassword,
   getConfiguredAdmin,
   listAdminAccounts,
   resetLocalAdminPassword,
   removeLocalAdminAccount,
+  SUPER_ADMIN_EMAIL,
 } from "@/lib/admin-auth";
 
 interface AdminUser {
@@ -22,14 +25,28 @@ interface AdminUser {
   source: "env" | "local";
 }
 
+const normalizeEmail = (email: string) => email.trim().toLowerCase();
+
 export default function AdminManagement() {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [admins, setAdmins] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
   const [passwordResets, setPasswordResets] = useState<Record<string, string>>({});
+
+  const currentAdminEmail = normalizeEmail(user?.email ?? "");
+  const isSuperAdmin = currentAdminEmail === SUPER_ADMIN_EMAIL;
+
+  const canResetPassword = (admin: AdminUser) => {
+    if (!currentAdminEmail) return false;
+    if (admin.source === "env") return false;
+
+    const targetEmail = normalizeEmail(admin.email);
+    return canAdminResetPassword(currentAdminEmail, targetEmail);
+  };
 
   const loadAdmins = () => {
     const accounts = listAdminAccounts();
@@ -134,7 +151,18 @@ export default function AdminManagement() {
     });
   };
 
-  const handleResetPassword = (adminEmail: string) => {
+  const handleResetPassword = (admin: AdminUser) => {
+    const adminEmail = normalizeEmail(admin.email);
+
+    if (!canResetPassword(admin)) {
+      toast({
+        title: "Not allowed",
+        description: "Only the super admin can reset other admins. You can only reset your own password.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const nextPassword = passwordResets[adminEmail]?.trim() ?? "";
 
     if (!nextPassword) {
@@ -146,7 +174,7 @@ export default function AdminManagement() {
       return;
     }
 
-    const updated = resetLocalAdminPassword(adminEmail, nextPassword);
+    const updated = resetLocalAdminPassword(adminEmail, nextPassword, currentAdminEmail);
 
     if (!updated) {
       toast({
@@ -243,7 +271,9 @@ export default function AdminManagement() {
           <Card>
             <CardHeader>
               <CardTitle>Current Admins ({admins.length})</CardTitle>
-              <CardDescription>Manage existing admin users</CardDescription>
+              <CardDescription>
+                Only {SUPER_ADMIN_EMAIL} can reset another admin's password. Other admins can only reset their own.
+              </CardDescription>
             </CardHeader>
             <CardContent>
               {loading ? (
@@ -254,59 +284,66 @@ export default function AdminManagement() {
                 <p className="text-muted-foreground text-center py-8">No admins yet</p>
               ) : (
                 <div className="space-y-3">
-                  {admins.map((admin) => (
-                    <div key={admin.email} className="p-4 border border-border rounded-lg">
-                      <div className="flex items-center justify-between gap-4">
-                        <div>
-                          <p className="font-medium">{admin.email}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {admin.source === "env"
-                              ? "Primary admin (from environment config)"
-                              : `Added ${new Date(admin.created_at).toLocaleDateString()}`}
-                          </p>
+                  {admins.map((admin) => {
+                    const normalizedAdminEmail = normalizeEmail(admin.email);
+                    const resetAllowed = canResetPassword(admin);
+
+                    return (
+                      <div key={admin.email} className="p-4 border border-border rounded-lg">
+                        <div className="flex items-center justify-between gap-4">
+                          <div>
+                            <p className="font-medium">{admin.email}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {admin.source === "env"
+                                ? "Primary admin (from environment config)"
+                                : `Added ${new Date(admin.created_at).toLocaleDateString()}`}
+                            </p>
+                          </div>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleRemoveAdmin(admin.email)}
+                            disabled={admin.source === "env"}
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Remove
+                          </Button>
                         </div>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleRemoveAdmin(admin.email)}
-                          disabled={admin.source === "env"}
-                        >
-                          <Trash2 className="w-4 h-4 mr-2" />
-                          Remove
-                        </Button>
+                        <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-end">
+                          <div className="flex-1">
+                            <Label htmlFor={`reset-password-${normalizedAdminEmail}`}>Reset password</Label>
+                            <Input
+                              id={`reset-password-${normalizedAdminEmail}`}
+                              type="password"
+                              placeholder={
+                                admin.source === "env"
+                                  ? "Password managed by environment variables"
+                                  : resetAllowed
+                                    ? "Enter a new password"
+                                    : "You can only reset your own password"
+                              }
+                              value={passwordResets[normalizedAdminEmail] ?? ""}
+                              onChange={(e) =>
+                                setPasswordResets((current) => ({
+                                  ...current,
+                                  [normalizedAdminEmail]: e.target.value,
+                                }))
+                              }
+                              disabled={!resetAllowed}
+                              className="mt-2"
+                            />
+                          </div>
+                          <Button
+                            variant="secondary"
+                            onClick={() => handleResetPassword(admin)}
+                            disabled={!resetAllowed}
+                          >
+                            Reset Password
+                          </Button>
+                        </div>
                       </div>
-                      <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-end">
-                      <div className="flex-1">
-                        <Label htmlFor={`reset-password-${admin.email}`}>Reset password</Label>
-                        <Input
-                          id={`reset-password-${admin.email}`}
-                          type="password"
-                          placeholder={
-                            admin.source === "env"
-                              ? "Password managed by environment variables"
-                              : "Enter a new password"
-                          }
-                          value={passwordResets[admin.email] ?? ""}
-                          onChange={(e) =>
-                            setPasswordResets((current) => ({
-                              ...current,
-                              [admin.email]: e.target.value,
-                            }))
-                          }
-                          disabled={admin.source === "env"}
-                          className="mt-2"
-                        />
-                      </div>
-                      <Button
-                        variant="secondary"
-                        onClick={() => handleResetPassword(admin.email)}
-                        disabled={admin.source === "env"}
-                      >
-                        Reset Password
-                      </Button>
-                    </div>
-                  </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </CardContent>

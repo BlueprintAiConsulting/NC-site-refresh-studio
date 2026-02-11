@@ -9,6 +9,20 @@ const ADMIN_ACCOUNTS_KEY = 'admin-auth-accounts';
 
 const normalizeEmail = (email: string) => email.trim().toLowerCase();
 
+
+export const SUPER_ADMIN_EMAIL = 'drewhufnagle@gmail.com';
+
+export const canAdminResetPassword = (requesterEmail: string, targetEmail: string): boolean => {
+  const normalizedRequester = normalizeEmail(requesterEmail);
+  const normalizedTarget = normalizeEmail(targetEmail);
+
+  if (!normalizedRequester || !normalizedTarget) {
+    return false;
+  }
+
+  return normalizedRequester === SUPER_ADMIN_EMAIL || normalizedRequester === normalizedTarget;
+};
+
 export const getConfiguredAdmin = (): AdminAccount | null => {
   const email = import.meta.env.VITE_ADMIN_EMAIL;
   const password = import.meta.env.VITE_ADMIN_PASSWORD;
@@ -99,12 +113,20 @@ export const removeLocalAdminAccount = (email: string): boolean => {
   return true;
 };
 
-export const resetLocalAdminPassword = (email: string, nextPassword: string): boolean => {
+export const resetLocalAdminPassword = (
+  email: string,
+  nextPassword: string,
+  requesterEmail?: string,
+): boolean => {
   const normalizedEmail = normalizeEmail(email);
   const trimmedPassword = nextPassword.trim();
   const configured = getConfiguredAdmin();
 
   if (!trimmedPassword || configured?.email === normalizedEmail) {
+    return false;
+  }
+
+  if (requesterEmail && !canAdminResetPassword(requesterEmail, normalizedEmail)) {
     return false;
   }
 
