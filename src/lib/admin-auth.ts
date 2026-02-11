@@ -106,7 +106,7 @@ export const validateAdminCredentials = (email: string, password: string): Admin
   ) ?? null;
 };
 
-export const isAdminLoginConfigured = () => Boolean(getConfiguredAdmin());
+export const isAdminLoginConfigured = () => listAdminAccounts().length > 0;
 
 export const ADMIN_STORAGE_KEYS = {
   accounts: ADMIN_ACCOUNTS_KEY,

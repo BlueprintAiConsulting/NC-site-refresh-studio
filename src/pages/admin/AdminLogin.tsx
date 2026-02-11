@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Lock, Mail, Loader2 } from 'lucide-react';
 import churchLogo from '@/assets/church-logo.png';
-import { isAdminLoginConfigured } from '@/lib/admin-auth';
+import { addLocalAdminAccount, isAdminLoginConfigured } from '@/lib/admin-auth';
 
 export default function AdminLogin() {
   const [email, setEmail] = useState('');
@@ -22,6 +22,10 @@ export default function AdminLogin() {
     setLoading(true);
 
     try {
+      if (!loginConfigured) {
+        addLocalAdminAccount(email, password);
+      }
+
       await signIn(email, password);
       navigate('/admin/dashboard');
     } catch (error) {
@@ -42,15 +46,18 @@ export default function AdminLogin() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Sign In</CardTitle>
-            <CardDescription>Enter your credentials to access the admin dashboard</CardDescription>
+            <CardTitle>{loginConfigured ? 'Sign In' : 'Set Up Admin Access'}</CardTitle>
+            <CardDescription>
+              {loginConfigured
+                ? 'Enter your credentials to access the admin dashboard'
+                : 'No admin account is configured yet. Create the first admin account to continue.'}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               {!loginConfigured ? (
-                <div className="rounded-md border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm text-destructive">
-                  Admin login is not configured. Set <code>VITE_ADMIN_EMAIL</code> and{' '}
-                  <code>VITE_ADMIN_PASSWORD</code> in your environment and restart the app.
+                <div className="rounded-md border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+                  Create your first admin account here. It will be stored locally in this browser.
                 </div>
               ) : null}
               <div className="space-y-2">
@@ -85,14 +92,16 @@ export default function AdminLogin() {
                 </div>
               </div>
 
-              <Button type="submit" className="w-full" disabled={loading || !loginConfigured}>
+              <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Signing in...
+                    {loginConfigured ? 'Signing in...' : 'Creating account...'}
                   </>
-                ) : (
+                ) : loginConfigured ? (
                   'Sign In'
+                ) : (
+                  'Create Initial Admin'
                 )}
               </Button>
             </form>

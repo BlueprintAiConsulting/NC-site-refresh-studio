@@ -62,21 +62,25 @@ GitHub Pages deployments are triggered from the `main` branch via the workflow a
 
 ## Admin Login Configuration
 
-Basic admin access now works without Supabase Auth. Configure these environment variables to sign in to `/admin/login`:
+Basic admin access works without Supabase Auth.
 
+You can either:
+
+1. Configure a primary admin in `.env`:
 ```sh
 VITE_ADMIN_EMAIL=admin@example.com
 VITE_ADMIN_PASSWORD=change-me
 ```
+2. Or, if no admin exists yet, open `/admin/login` and create the first admin account directly from the login form.
 
 The admin session is stored in browser `localStorage` under `admin-auth-session`.
 
 
 ## Verifying the Admin Flow (No Supabase Auth)
 
-1. Set `VITE_ADMIN_EMAIL` and `VITE_ADMIN_PASSWORD` in your local `.env`.
-2. Start the app (`npm run dev`).
-3. Visit `/admin/login` and sign in with those credentials.
+1. Start the app (`npm run dev`).
+2. Visit `/admin/login`.
+3. Sign in with an existing admin account (or create the first one if prompted).
 4. Confirm you are redirected to `/admin/dashboard`.
 5. Click **Sign Out** and confirm you are returned to an unauthenticated state.
 
