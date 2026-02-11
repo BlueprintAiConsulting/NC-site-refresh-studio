@@ -238,6 +238,49 @@ describe("AdminManagement", () => {
     });
   });
 
+  it("shows edge-function troubleshooting guidance when direct admin creation cannot reach Supabase", async () => {
+    mocks.invokeMock.mockImplementation((functionName: string) => {
+      if (functionName === "list-admins") {
+        return Promise.resolve({ data: { admins: [] }, error: null });
+      }
+
+      if (functionName === "add-admin") {
+        return Promise.resolve({
+          data: null,
+          error: new Error("Failed to fetch"),
+        });
+      }
+
+      return Promise.resolve({ data: null, error: null });
+    });
+
+    const { default: AdminManagement } = await import("./AdminManagement");
+
+    render(
+      <MemoryRouter>
+        <AdminManagement />
+      </MemoryRouter>
+    );
+
+    fireEvent.change(screen.getByLabelText(/email address/i), {
+      target: { value: "newadmin@example.com" },
+    });
+    fireEvent.change(screen.getByLabelText(/set password \(optional\)/i), {
+      target: { value: "StrongPassword123!" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /add admin/i }));
+
+    await waitFor(() => {
+      expect(mocks.toastMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: "Failed to add admin",
+          description:
+            "Could not reach Supabase Edge Functions. Confirm the add-admin function is deployed, your VITE_SUPABASE_URL and publishable key match the live project, and Supabase Auth SMTP settings are configured in the dashboard.",
+        }),
+      );
+    });
+  });
+
   it("loads admins via rpc when list-admins edge function is unavailable", async () => {
     mocks.invokeMock.mockImplementation((functionName: string) => {
       if (functionName === "list-admins") {
