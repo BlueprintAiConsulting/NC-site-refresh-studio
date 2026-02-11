@@ -27,6 +27,8 @@ vi.mock("react-router-dom", async () => {
 
 describe("AdminLogin", () => {
   beforeEach(() => {
+    vi.stubEnv("VITE_ADMIN_EMAIL", "admin@example.com");
+    vi.stubEnv("VITE_ADMIN_PASSWORD", "StrongPassword123!");
     mocks.signInMock.mockReset();
     mocks.navigateMock.mockReset();
     mocks.isAdminLoginConfiguredMock.mockReset();
@@ -70,6 +72,11 @@ describe("AdminLogin", () => {
     fireEvent.change(screen.getByLabelText(/password/i), {
       target: { value: "bad-password" },
     });
+    fireEvent.change(screen.getByLabelText(/password/i), {
+      target: { value: "bad-password" },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /sign in/i }));
 
     fireEvent.click(screen.getByRole("button", { name: /sign in/i }));
 
