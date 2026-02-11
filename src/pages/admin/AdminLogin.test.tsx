@@ -4,10 +4,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   signInMock: vi.fn(),
   navigateMock: vi.fn(),
-  setSessionMock: vi.fn(),
-  verifyOtpMock: vi.fn(),
-  exchangeCodeForSessionMock: vi.fn(),
-  updateUserMock: vi.fn(),
 }));
 
 vi.mock("@/contexts/useAuth", () => ({
@@ -22,93 +18,67 @@ vi.mock("react-router-dom", async () => {
   };
 });
 
-vi.mock("@/integrations/supabase/client", () => ({
-  supabase: {
-    auth: {
-      setSession: mocks.setSessionMock,
-      verifyOtp: mocks.verifyOtpMock,
-      exchangeCodeForSession: mocks.exchangeCodeForSessionMock,
-      updateUser: mocks.updateUserMock,
-    },
-  },
-}));
-
-describe("AdminLogin invite links", () => {
+describe("AdminLogin", () => {
   beforeEach(() => {
+    vi.stubEnv("VITE_ADMIN_EMAIL", "admin@example.com");
+    vi.stubEnv("VITE_ADMIN_PASSWORD", "StrongPassword123!");
     mocks.signInMock.mockReset();
     mocks.navigateMock.mockReset();
-    mocks.setSessionMock.mockReset();
-    mocks.verifyOtpMock.mockReset();
-    mocks.exchangeCodeForSessionMock.mockReset();
-    mocks.updateUserMock.mockReset();
-
-    mocks.setSessionMock.mockResolvedValue({ error: null });
-    mocks.verifyOtpMock.mockResolvedValue({ error: null });
-    mocks.exchangeCodeForSessionMock.mockResolvedValue({ error: null });
-    mocks.updateUserMock.mockResolvedValue({ error: null });
-
-    window.history.replaceState({}, "", "/admin/login");
+    mocks.signInMock.mockResolvedValue(undefined);
   });
 
-  it("reads invite access tokens from URL hash and enables signup flow", async () => {
-    window.history.replaceState(
-      {},
-      "",
-      "/admin/login#access_token=abc123&refresh_token=def456&type=invite",
-    );
+  it("submits credentials and navigates to admin dashboard", async () => {
+    const { default: AdminLogin } = await import("./AdminLogin");
+    render(<AdminLogin />);
+
+    fireEvent.change(screen.getByLabelText(/email/i), {
+      target: { value: "admin@example.com" },
+    });
+    fireEvent.change(screen.getByLabelText(/password/i), {
+      target: { value: "StrongPassword123!" },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /sign in/i }));
+
+    await waitFor(() => {
+      expect(mocks.signInMock).toHaveBeenCalledWith("admin@example.com", "StrongPassword123!");
+    });
+
+    await waitFor(() => {
+      expect(mocks.navigateMock).toHaveBeenCalledWith("/admin/dashboard");
+    });
+  });
+
+  it("does not navigate when sign-in fails", async () => {
+    mocks.signInMock.mockRejectedValue(new Error("Invalid credentials"));
 
     const { default: AdminLogin } = await import("./AdminLogin");
     render(<AdminLogin />);
 
-    fireEvent.click(screen.getByRole("button", { name: /create your account/i }));
-
-    await waitFor(() => {
-      expect(mocks.setSessionMock).toHaveBeenCalledWith({
-        access_token: "abc123",
-        refresh_token: "def456",
-      });
+    fireEvent.change(screen.getByLabelText(/email/i), {
+      target: { value: "admin@example.com" },
+    });
+    fireEvent.change(screen.getByLabelText(/password/i), {
+      target: { value: "bad-password" },
     });
 
+    fireEvent.click(screen.getByRole("button", { name: /sign in/i }));
+
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: /create account/i })).toBeEnabled();
+      expect(mocks.signInMock).toHaveBeenCalled();
     });
+
+    expect(mocks.navigateMock).not.toHaveBeenCalled();
   });
 
-  it("reads token_hash from URL hash and verifies invite otp", async () => {
-    window.history.replaceState({}, "", "/admin/login#type=invite&token_hash=otp-token");
+  it("shows setup guidance and disables submit when admin env is missing", async () => {
+    vi.stubEnv("VITE_ADMIN_EMAIL", "");
+    vi.stubEnv("VITE_ADMIN_PASSWORD", "");
 
     const { default: AdminLogin } = await import("./AdminLogin");
     render(<AdminLogin />);
 
-    fireEvent.click(screen.getByRole("button", { name: /create your account/i }));
-
-    await waitFor(() => {
-      expect(mocks.verifyOtpMock).toHaveBeenCalledWith({
-        type: "invite",
-        token_hash: "otp-token",
-      });
-    });
-
-    await waitFor(() => {
-      expect(screen.getByRole("button", { name: /create account/i })).toBeEnabled();
-    });
+    expect(screen.getByText(/admin login is not configured/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /sign in/i })).toBeDisabled();
   });
-
-  it("reads invite code links and exchanges session", async () => {
-    window.history.replaceState({}, "", "/admin/login?code=pkce-code&type=invite");
-
-    const { default: AdminLogin } = await import("./AdminLogin");
-    render(<AdminLogin />);
-
-    fireEvent.click(screen.getByRole("button", { name: /create your account/i }));
-
-    await waitFor(() => {
-      expect(mocks.exchangeCodeForSessionMock).toHaveBeenCalledWith("pkce-code");
-    });
-
-    await waitFor(() => {
-      expect(screen.getByRole("button", { name: /create account/i })).toBeEnabled();
-    });
-  });
-
 });

@@ -1,107 +1,93 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { AuthContext } from '@/contexts/auth-context';
-import type { Session, User } from '@supabase/supabase-js';
+import { AuthContext, type AuthSession, type AuthUser } from '@/contexts/auth-context';
+import { ADMIN_STORAGE_KEYS, validateAdminCredentials } from '@/lib/admin-auth';
+
+interface StoredAdminSession {
+  email: string;
+  loggedInAt: string;
+}
+
+const createUserFromEmail = (email: string): AuthUser => ({
+  id: `admin:${email.toLowerCase()}`,
+  email,
+});
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [session, setSession] = useState<AuthSession | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        checkAdminRole(session.user.id);
-      } else {
-        setLoading(false);
-      }
-    });
+    const rawSession = window.localStorage.getItem(ADMIN_STORAGE_KEYS.session);
 
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        checkAdminRole(session.user.id);
-      } else {
-        setIsAdmin(false);
-        setLoading(false);
-      }
-    });
+    if (!rawSession) {
+      setLoading(false);
+      return;
+    }
 
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const checkAdminRole = async (userId: string) => {
     try {
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', userId)
-        .single();
-
-      if (error) {
-        console.error('Error checking admin role:', error);
-        setIsAdmin(false);
-      } else {
-        setIsAdmin(data?.role === 'admin');
+      const parsedSession = JSON.parse(rawSession) as StoredAdminSession;
+      if (!parsedSession.email || !parsedSession.loggedInAt) {
+        throw new Error('Invalid admin session payload');
       }
-    } catch (error: unknown) {
-      console.error('Error checking admin role:', error);
+
+      setUser(createUserFromEmail(parsedSession.email));
+      setSession({ loggedInAt: parsedSession.loggedInAt });
+      setIsAdmin(true);
+    } catch (error) {
+      console.error('Failed to restore admin session:', error);
+      window.localStorage.removeItem(ADMIN_STORAGE_KEYS.session);
+      setUser(null);
+      setSession(null);
       setIsAdmin(false);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const signIn = async (email: string, password: string) => {
-    try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+    const matchedAccount = validateAdminCredentials(email, password);
 
-      if (error) throw error;
-
-      toast({
-        title: 'Success',
-        description: 'Signed in successfully',
-      });
-    } catch (error: unknown) {
+    if (!matchedAccount) {
+      const error = new Error('Invalid admin credentials.');
       toast({
         title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to sign in',
+        description: error.message,
         variant: 'destructive',
       });
       throw error;
     }
+
+    const nextSession: StoredAdminSession = {
+      email: matchedAccount.email,
+      loggedInAt: new Date().toISOString(),
+    };
+
+    window.localStorage.setItem(ADMIN_STORAGE_KEYS.session, JSON.stringify(nextSession));
+
+    setUser(createUserFromEmail(matchedAccount.email));
+    setSession({ loggedInAt: nextSession.loggedInAt });
+    setIsAdmin(true);
+
+    toast({
+      title: 'Success',
+      description: 'Signed in successfully',
+    });
   };
 
   const signOut = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+    window.localStorage.removeItem(ADMIN_STORAGE_KEYS.session);
+    setUser(null);
+    setSession(null);
+    setIsAdmin(false);
 
-      toast({
-        title: 'Success',
-        description: 'Signed out successfully',
-      });
-    } catch (error: unknown) {
-      toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to sign out',
-        variant: 'destructive',
-      });
-      throw error;
-    }
+    toast({
+      title: 'Success',
+      description: 'Signed out successfully',
+    });
   };
 
   return (
