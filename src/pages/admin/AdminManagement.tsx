@@ -195,6 +195,51 @@ export default function AdminManagement() {
     }
   };
 
+  const handleResetPassword = (admin: AdminUser) => {
+    const adminEmail = normalizeEmail(admin.email);
+
+    if (!canResetPassword(admin)) {
+      toast({
+        title: "Not allowed",
+        description: "Only the super admin can reset other admins. You can only reset your own password.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const nextPassword = passwordResets[adminEmail]?.trim() ?? "";
+
+    if (!nextPassword) {
+      toast({
+        title: "Password required",
+        description: "Enter a new password before resetting.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const updated = resetLocalAdminPassword(adminEmail, nextPassword, currentAdminEmail);
+
+    if (!updated) {
+      toast({
+        title: "Unable to reset password",
+        description: "Only locally-stored admin accounts can be updated here.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setPasswordResets((current) => ({
+      ...current,
+      [adminEmail]: "",
+    }));
+
+    toast({
+      title: "Password updated",
+      description: `${adminEmail}'s password has been reset on this site.`,
+    });
+  };
+
   return (
     <>
       <Header />
