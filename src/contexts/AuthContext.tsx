@@ -1,17 +1,25 @@
 import { useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AuthContext, type AuthSession, type AuthUser } from '@/contexts/auth-context';
-import { ADMIN_STORAGE_KEYS, validateAdminCredentials } from '@/lib/admin-auth';
+import { supabase } from '@/integrations/supabase/client';
 
-interface StoredAdminSession {
-  email: string;
-  loggedInAt: string;
-}
-
-const createUserFromEmail = (email: string): AuthUser => ({
-  id: `admin:${email.toLowerCase()}`,
-  email,
+const createUserFromAuth = (user: { id: string; email?: string | null }): AuthUser => ({
+  id: user.id,
+  email: user.email ?? '',
 });
+
+const checkIsAdmin = async (userId: string): Promise<boolean> => {
+  const { data, error } = await supabase.rpc('has_role', {
+    _user_id: userId,
+    _role: 'admin',
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  return data === true;
+};
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -21,55 +29,106 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
 
   useEffect(() => {
-    const rawSession = window.localStorage.getItem(ADMIN_STORAGE_KEYS.session);
+    let mounted = true;
 
-    if (!rawSession) {
-      setLoading(false);
-      return;
-    }
+    const syncFromSession = async () => {
+      try {
+        const {
+          data: { session: authSession },
+          error,
+        } = await supabase.auth.getSession();
 
-    try {
-      const parsedSession = JSON.parse(rawSession) as StoredAdminSession;
-      if (!parsedSession.email || !parsedSession.loggedInAt) {
-        throw new Error('Invalid admin session payload');
+        if (error || !authSession?.user) {
+          if (!mounted) return;
+          setUser(null);
+          setSession(null);
+          setIsAdmin(false);
+          return;
+        }
+
+        const admin = await checkIsAdmin(authSession.user.id);
+
+        if (!mounted) return;
+
+        setUser(createUserFromAuth(authSession.user));
+        setSession({ loggedInAt: new Date().toISOString() });
+        setIsAdmin(admin);
+      } catch (error) {
+        console.error('Failed to restore auth session:', error);
+        if (!mounted) return;
+        setUser(null);
+        setSession(null);
+        setIsAdmin(false);
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    syncFromSession();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (_event, authSession) => {
+      if (!mounted) return;
+
+      if (!authSession?.user) {
+        setUser(null);
+        setSession(null);
+        setIsAdmin(false);
+        return;
       }
 
-      setUser(createUserFromEmail(parsedSession.email));
-      setSession({ loggedInAt: parsedSession.loggedInAt });
-      setIsAdmin(true);
-    } catch (error) {
-      console.error('Failed to restore admin session:', error);
-      window.localStorage.removeItem(ADMIN_STORAGE_KEYS.session);
-      setUser(null);
-      setSession(null);
-      setIsAdmin(false);
-    } finally {
-      setLoading(false);
-    }
+      try {
+        const admin = await checkIsAdmin(authSession.user.id);
+        if (!mounted) return;
+        setUser(createUserFromAuth(authSession.user));
+        setSession({ loggedInAt: new Date().toISOString() });
+        setIsAdmin(admin);
+      } catch (error) {
+        console.error('Failed to validate admin role:', error);
+        if (!mounted) return;
+        setUser(createUserFromAuth(authSession.user));
+        setSession({ loggedInAt: new Date().toISOString() });
+        setIsAdmin(false);
+      }
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const matchedAccount = validateAdminCredentials(email, password);
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
-    if (!matchedAccount) {
-      const error = new Error('Invalid admin credentials.');
+    if (error || !data.user) {
+      const authError = new Error(error?.message || 'Invalid admin credentials.');
       toast({
         title: 'Error',
-        description: error.message,
+        description: authError.message,
         variant: 'destructive',
       });
-      throw error;
+      throw authError;
     }
 
-    const nextSession: StoredAdminSession = {
-      email: matchedAccount.email,
-      loggedInAt: new Date().toISOString(),
-    };
+    const admin = await checkIsAdmin(data.user.id);
 
-    window.localStorage.setItem(ADMIN_STORAGE_KEYS.session, JSON.stringify(nextSession));
+    if (!admin) {
+      await supabase.auth.signOut();
+      const roleError = new Error('Your account does not have admin access.');
+      toast({
+        title: 'Access denied',
+        description: roleError.message,
+        variant: 'destructive',
+      });
+      throw roleError;
+    }
 
-    setUser(createUserFromEmail(matchedAccount.email));
-    setSession({ loggedInAt: nextSession.loggedInAt });
+    setUser(createUserFromAuth(data.user));
+    setSession({ loggedInAt: new Date().toISOString() });
     setIsAdmin(true);
 
     toast({
@@ -79,7 +138,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
-    window.localStorage.removeItem(ADMIN_STORAGE_KEYS.session);
+    await supabase.auth.signOut();
     setUser(null);
     setSession(null);
     setIsAdmin(false);

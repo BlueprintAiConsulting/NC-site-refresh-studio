@@ -18,6 +18,8 @@ interface AddAdminRequest {
   sendInvite?: boolean;
 }
 
+const SUPER_ADMIN_EMAIL = "drewhufnagle@gmail.com";
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -69,6 +71,9 @@ const handler = async (req: Request): Promise<Response> => {
     const { email, password, sendInvite }: AddAdminRequest = await req.json();
 
     const normalizedEmail = email?.trim().toLowerCase();
+    const requesterEmail = user.email?.trim().toLowerCase() ?? "";
+    const requesterIsSuperAdmin = requesterEmail === SUPER_ADMIN_EMAIL;
+
     if (!normalizedEmail) {
       return new Response(JSON.stringify({ error: "Email is required" }), {
         status: 400,
@@ -82,6 +87,19 @@ const handler = async (req: Request): Promise<Response> => {
         status: 400,
         headers: { "Content-Type": "application/json", ...corsHeaders },
       });
+    }
+
+    const isPasswordUpdateRequest = Boolean(password?.trim());
+    if (isPasswordUpdateRequest && !requesterIsSuperAdmin && requesterEmail !== normalizedEmail) {
+      return new Response(
+        JSON.stringify({
+          error: "Only the super admin can reset other admins. You can only reset your own password.",
+        }),
+        {
+          status: 403,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        },
+      );
     }
 
     const { data: existingUsers, error: listError } =
