@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
   listAdminAccountsMock: vi.fn(),
   addLocalAdminAccountMock: vi.fn(),
   removeLocalAdminAccountMock: vi.fn(),
+  resetLocalAdminPasswordMock: vi.fn(),
   getConfiguredAdminMock: vi.fn(),
 }));
 
@@ -21,6 +22,7 @@ vi.mock("@/lib/admin-auth", () => ({
   listAdminAccounts: mocks.listAdminAccountsMock,
   addLocalAdminAccount: mocks.addLocalAdminAccountMock,
   removeLocalAdminAccount: mocks.removeLocalAdminAccountMock,
+  resetLocalAdminPassword: mocks.resetLocalAdminPasswordMock,
   getConfiguredAdmin: mocks.getConfiguredAdminMock,
 }));
 
@@ -30,6 +32,7 @@ describe("AdminManagement", () => {
     mocks.listAdminAccountsMock.mockReset();
     mocks.addLocalAdminAccountMock.mockReset();
     mocks.removeLocalAdminAccountMock.mockReset();
+    mocks.resetLocalAdminPasswordMock.mockReset();
     mocks.getConfiguredAdminMock.mockReset();
 
     mocks.getConfiguredAdminMock.mockReturnValue({
@@ -45,6 +48,7 @@ describe("AdminManagement", () => {
     ]);
 
     mocks.removeLocalAdminAccountMock.mockReturnValue(true);
+    mocks.resetLocalAdminPasswordMock.mockReturnValue(true);
   });
 
   it("adds a local admin account with email and password", async () => {
@@ -96,6 +100,32 @@ describe("AdminManagement", () => {
     });
 
     expect(mocks.addLocalAdminAccountMock).not.toHaveBeenCalled();
+  });
+
+
+  it("resets a local admin password without email flow", async () => {
+    const { default: AdminManagement } = await import("./AdminManagement");
+
+    render(
+      <MemoryRouter>
+        <AdminManagement />
+      </MemoryRouter>,
+    );
+
+    const resetPasswordInputs = screen.getAllByLabelText(/reset password/i);
+    fireEvent.change(resetPasswordInputs[1], {
+      target: { value: "UpdatedPass456!" },
+    });
+
+    const resetButtons = screen.getAllByRole("button", { name: /reset password/i });
+    fireEvent.click(resetButtons[1]);
+
+    await waitFor(() => {
+      expect(mocks.resetLocalAdminPasswordMock).toHaveBeenCalledWith(
+        "editor@example.com",
+        "UpdatedPass456!",
+      );
+    });
   });
 
   it("disables remove button for env-configured primary admin", async () => {

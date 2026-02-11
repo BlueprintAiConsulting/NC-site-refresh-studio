@@ -12,6 +12,7 @@ import {
   addLocalAdminAccount,
   getConfiguredAdmin,
   listAdminAccounts,
+  resetLocalAdminPassword,
   removeLocalAdminAccount,
 } from "@/lib/admin-auth";
 
@@ -28,6 +29,7 @@ export default function AdminManagement() {
   const [admins, setAdmins] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
+  const [passwordResets, setPasswordResets] = useState<Record<string, string>>({});
 
   const loadAdmins = () => {
     const accounts = listAdminAccounts();
@@ -132,6 +134,40 @@ export default function AdminManagement() {
     });
   };
 
+  const handleResetPassword = (adminEmail: string) => {
+    const nextPassword = passwordResets[adminEmail]?.trim() ?? "";
+
+    if (!nextPassword) {
+      toast({
+        title: "Password required",
+        description: "Enter a new password before resetting.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const updated = resetLocalAdminPassword(adminEmail, nextPassword);
+
+    if (!updated) {
+      toast({
+        title: "Unable to reset password",
+        description: "Only locally-stored admin accounts can be updated here.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setPasswordResets((current) => ({
+      ...current,
+      [adminEmail]: "",
+    }));
+
+    toast({
+      title: "Password updated",
+      description: `${adminEmail}'s password has been reset on this site.`,
+    });
+  };
+
   return (
     <>
       <Header />
@@ -219,28 +255,57 @@ export default function AdminManagement() {
               ) : (
                 <div className="space-y-3">
                   {admins.map((admin) => (
-                    <div
-                      key={admin.email}
-                      className="flex items-center justify-between p-4 border border-border rounded-lg"
-                    >
-                      <div>
-                        <p className="font-medium">{admin.email}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {admin.source === "env"
-                            ? "Primary admin (from environment config)"
-                            : `Added ${new Date(admin.created_at).toLocaleDateString()}`}
-                        </p>
+                    <div key={admin.email} className="p-4 border border-border rounded-lg">
+                      <div className="flex items-center justify-between gap-4">
+                        <div>
+                          <p className="font-medium">{admin.email}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {admin.source === "env"
+                              ? "Primary admin (from environment config)"
+                              : `Added ${new Date(admin.created_at).toLocaleDateString()}`}
+                          </p>
+                        </div>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleRemoveAdmin(admin.email)}
+                          disabled={admin.source === "env"}
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Remove
+                        </Button>
+                      </div>
+                      <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-end">
+                      <div className="flex-1">
+                        <Label htmlFor={`reset-password-${admin.email}`}>Reset password</Label>
+                        <Input
+                          id={`reset-password-${admin.email}`}
+                          type="password"
+                          placeholder={
+                            admin.source === "env"
+                              ? "Password managed by environment variables"
+                              : "Enter a new password"
+                          }
+                          value={passwordResets[admin.email] ?? ""}
+                          onChange={(e) =>
+                            setPasswordResets((current) => ({
+                              ...current,
+                              [admin.email]: e.target.value,
+                            }))
+                          }
+                          disabled={admin.source === "env"}
+                          className="mt-2"
+                        />
                       </div>
                       <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => handleRemoveAdmin(admin.email)}
+                        variant="secondary"
+                        onClick={() => handleResetPassword(admin.email)}
                         disabled={admin.source === "env"}
                       >
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        Remove
+                        Reset Password
                       </Button>
                     </div>
+                  </div>
                   ))}
                 </div>
               )}
