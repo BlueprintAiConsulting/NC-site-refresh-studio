@@ -4,6 +4,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY");
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+const ADMIN_INVITE_REDIRECT_URL = Deno.env.get("ADMIN_INVITE_REDIRECT_URL");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -124,13 +125,19 @@ const handler = async (req: Request): Promise<Response> => {
       userId = newUser.user.id;
       message = "Admin created with the provided password.";
     } else if (sendInvite) {
+      const inviteOptions = ADMIN_INVITE_REDIRECT_URL
+        ? { redirectTo: ADMIN_INVITE_REDIRECT_URL }
+        : undefined;
+
       const { data: inviteData, error: inviteError } =
-        await supabaseAdmin.auth.admin.inviteUserByEmail(normalizedEmail);
+        await supabaseAdmin.auth.admin.inviteUserByEmail(normalizedEmail, inviteOptions);
 
       if (inviteError) throw inviteError;
       if (!inviteData?.user?.id) throw new Error("Failed to invite user");
       userId = inviteData.user.id;
-      message = "Invite email sent so the user can set a password.";
+      message = ADMIN_INVITE_REDIRECT_URL
+        ? "Invite email sent so the user can set a password."
+        : "Invite email sent. If signup cannot verify the invite, set ADMIN_INVITE_REDIRECT_URL for this function to your /admin/login URL.";
     } else {
       return new Response(
         JSON.stringify({
