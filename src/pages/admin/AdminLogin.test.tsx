@@ -4,14 +4,17 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   signInMock: vi.fn(),
   navigateMock: vi.fn(),
-  setSessionMock: vi.fn(),
-  verifyOtpMock: vi.fn(),
-  exchangeCodeForSessionMock: vi.fn(),
-  updateUserMock: vi.fn(),
+  isAdminLoginConfiguredMock: vi.fn(),
+  addLocalAdminAccountMock: vi.fn(),
 }));
 
 vi.mock("@/contexts/useAuth", () => ({
   useAuth: () => ({ signIn: mocks.signInMock }),
+}));
+
+vi.mock("@/lib/admin-auth", () => ({
+  isAdminLoginConfigured: mocks.isAdminLoginConfiguredMock,
+  addLocalAdminAccount: mocks.addLocalAdminAccountMock,
 }));
 
 vi.mock("react-router-dom", async () => {
@@ -22,93 +25,79 @@ vi.mock("react-router-dom", async () => {
   };
 });
 
-vi.mock("@/integrations/supabase/client", () => ({
-  supabase: {
-    auth: {
-      setSession: mocks.setSessionMock,
-      verifyOtp: mocks.verifyOtpMock,
-      exchangeCodeForSession: mocks.exchangeCodeForSessionMock,
-      updateUser: mocks.updateUserMock,
-    },
-  },
-}));
-
-describe("AdminLogin invite links", () => {
+describe("AdminLogin", () => {
   beforeEach(() => {
     mocks.signInMock.mockReset();
     mocks.navigateMock.mockReset();
-    mocks.setSessionMock.mockReset();
-    mocks.verifyOtpMock.mockReset();
-    mocks.exchangeCodeForSessionMock.mockReset();
-    mocks.updateUserMock.mockReset();
+    mocks.isAdminLoginConfiguredMock.mockReset();
+    mocks.addLocalAdminAccountMock.mockReset();
 
-    mocks.setSessionMock.mockResolvedValue({ error: null });
-    mocks.verifyOtpMock.mockResolvedValue({ error: null });
-    mocks.exchangeCodeForSessionMock.mockResolvedValue({ error: null });
-    mocks.updateUserMock.mockResolvedValue({ error: null });
-
-    window.history.replaceState({}, "", "/admin/login");
+    mocks.signInMock.mockResolvedValue(undefined);
+    mocks.isAdminLoginConfiguredMock.mockReturnValue(true);
   });
 
-  it("reads invite access tokens from URL hash and enables signup flow", async () => {
-    window.history.replaceState(
-      {},
-      "",
-      "/admin/login#access_token=abc123&refresh_token=def456&type=invite",
-    );
+  it("submits credentials and navigates to admin dashboard", async () => {
+    const { default: AdminLogin } = await import("./AdminLogin");
+    render(<AdminLogin />);
+
+    fireEvent.change(screen.getByLabelText(/email/i), {
+      target: { value: "admin@example.com" },
+    });
+    fireEvent.change(screen.getByLabelText(/password/i), {
+      target: { value: "StrongPassword123!" },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /sign in/i }));
+
+    await waitFor(() => {
+      expect(mocks.signInMock).toHaveBeenCalledWith("admin@example.com", "StrongPassword123!");
+    });
+
+    await waitFor(() => {
+      expect(mocks.navigateMock).toHaveBeenCalledWith("/admin/dashboard");
+    });
+  });
+
+  it("does not navigate when sign-in fails", async () => {
+    mocks.signInMock.mockRejectedValue(new Error("Invalid credentials"));
 
     const { default: AdminLogin } = await import("./AdminLogin");
     render(<AdminLogin />);
 
-    fireEvent.click(screen.getByRole("button", { name: /create your account/i }));
-
-    await waitFor(() => {
-      expect(mocks.setSessionMock).toHaveBeenCalledWith({
-        access_token: "abc123",
-        refresh_token: "def456",
-      });
+    fireEvent.change(screen.getByLabelText(/email/i), {
+      target: { value: "admin@example.com" },
+    });
+    fireEvent.change(screen.getByLabelText(/password/i), {
+      target: { value: "bad-password" },
     });
 
+    fireEvent.click(screen.getByRole("button", { name: /sign in/i }));
+
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: /create account/i })).toBeEnabled();
+      expect(mocks.signInMock).toHaveBeenCalled();
     });
+
+    expect(mocks.navigateMock).not.toHaveBeenCalled();
   });
 
-  it("reads token_hash from URL hash and verifies invite otp", async () => {
-    window.history.replaceState({}, "", "/admin/login#type=invite&token_hash=otp-token");
+  it("creates the first admin account when none exists", async () => {
+    mocks.isAdminLoginConfiguredMock.mockReturnValue(false);
 
     const { default: AdminLogin } = await import("./AdminLogin");
     render(<AdminLogin />);
 
-    fireEvent.click(screen.getByRole("button", { name: /create your account/i }));
-
-    await waitFor(() => {
-      expect(mocks.verifyOtpMock).toHaveBeenCalledWith({
-        type: "invite",
-        token_hash: "otp-token",
-      });
+    fireEvent.change(screen.getByLabelText(/email/i), {
+      target: { value: "owner@example.com" },
+    });
+    fireEvent.change(screen.getByLabelText(/password/i), {
+      target: { value: "OwnerPass123!" },
     });
 
-    await waitFor(() => {
-      expect(screen.getByRole("button", { name: /create account/i })).toBeEnabled();
-    });
-  });
-
-  it("reads invite code links and exchanges session", async () => {
-    window.history.replaceState({}, "", "/admin/login?code=pkce-code&type=invite");
-
-    const { default: AdminLogin } = await import("./AdminLogin");
-    render(<AdminLogin />);
-
-    fireEvent.click(screen.getByRole("button", { name: /create your account/i }));
+    fireEvent.click(screen.getByRole("button", { name: /create initial admin/i }));
 
     await waitFor(() => {
-      expect(mocks.exchangeCodeForSessionMock).toHaveBeenCalledWith("pkce-code");
-    });
-
-    await waitFor(() => {
-      expect(screen.getByRole("button", { name: /create account/i })).toBeEnabled();
+      expect(mocks.addLocalAdminAccountMock).toHaveBeenCalledWith("owner@example.com", "OwnerPass123!");
+      expect(mocks.signInMock).toHaveBeenCalledWith("owner@example.com", "OwnerPass123!");
     });
   });
-
 });
