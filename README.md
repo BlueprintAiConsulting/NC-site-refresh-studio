@@ -48,7 +48,8 @@ GitHub Pages deployments are triggered from the `main` branch via the workflow a
 - **React** - UI framework
 - **shadcn/ui** - Component library
 - **Tailwind CSS** - Styling
-- **Supabase** - Backend services
+- **Supabase** - Optional backend services for content/features
+- **Local admin auth** - Basic admin sign-in via environment variables
 
 ## Project Structure
 
@@ -57,3 +58,40 @@ GitHub Pages deployments are triggered from the `main` branch via the workflow a
 - `/src/hooks` - Custom React hooks
 - `/src/integrations` - Third-party integrations
 - `/supabase` - Supabase configuration and migrations
+
+
+## Admin Login Configuration
+
+Basic admin access now works without Supabase Auth. Configure these environment variables to sign in to `/admin/login`:
+
+```sh
+VITE_ADMIN_EMAIL=admin@example.com
+VITE_ADMIN_PASSWORD=change-me
+```
+
+The admin session is stored in browser `localStorage` under `admin-auth-session`.
+
+
+## Verifying the Admin Flow (No Supabase Auth)
+
+1. Set `VITE_ADMIN_EMAIL` and `VITE_ADMIN_PASSWORD` in your local `.env`.
+2. Start the app (`npm run dev`).
+3. Visit `/admin/login` and sign in with those credentials.
+4. Confirm you are redirected to `/admin/dashboard`.
+5. Click **Sign Out** and confirm you are returned to an unauthenticated state.
+
+This verifies the admin auth flow itself works without Supabase Auth.
+
+
+## Adding Admins (Full Local Replacement)
+
+Admin provisioning is now local to the site and does not require Supabase:
+
+1. Sign in using the env-configured primary admin (`VITE_ADMIN_EMAIL` / `VITE_ADMIN_PASSWORD`).
+2. Open `/admin/management`.
+3. Enter the new admin's email and password, then click **Add Admin**.
+4. The account is stored in browser `localStorage` under `admin-auth-accounts`.
+5. The primary env admin cannot be removed in the UI; edit `.env` to change that account.
+
+> Note: Because accounts are local-storage based, this is single-browser/device admin management.
+> For multi-device/shared production admin accounts, replace this with your own backend user system.

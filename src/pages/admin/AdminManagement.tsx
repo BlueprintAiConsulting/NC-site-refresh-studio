@@ -6,83 +6,60 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Trash2, Plus, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
+import {
+  addLocalAdminAccount,
+  getConfiguredAdmin,
+  listAdminAccounts,
+  removeLocalAdminAccount,
+} from "@/lib/admin-auth";
 
 interface AdminUser {
-  id: string;
-  user_id: string;
   email: string;
   created_at: string;
+  source: "env" | "local";
 }
 
 export default function AdminManagement() {
   const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [sendInvite, setSendInvite] = useState(true);
   const [admins, setAdmins] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
 
-  const edgeFunctionTroubleshooting =
-    "Could not reach Supabase Edge Functions. Confirm the add-admin function is deployed, your VITE_SUPABASE_URL and publishable key match the live project, and Supabase Auth SMTP settings are configured in the dashboard.";
-
-  const edgeFunctionTransportIndicators = [
-    "edge function",
-    "failed to send a request to edge function",
-    "failed to send a request to the edge function",
-    "failed to fetch",
-    "networkerror",
-  ];
-
-  const isEdgeFunctionTransportError = (err: Error & { name?: string }) => {
-    if (err.name === "FunctionsFetchError") {
-      return true;
-    }
-
-    const normalizedMessage = (err.message ?? "").toLowerCase();
-    return edgeFunctionTransportIndicators.some((indicator) => normalizedMessage.includes(indicator));
+  const loadAdmins = () => {
+    const accounts = listAdminAccounts();
+    setAdmins(
+      accounts.map((account) => ({
+        email: account.email,
+        created_at: account.createdAt,
+        source: account.source,
+      })),
+    );
   };
 
-  const loadAdminsWithFallback = async () => {
-    const { data, error } = await supabase.functions.invoke("list-admins");
-    if (!error) {
-      setAdmins(data?.admins ?? []);
-      return;
-    }
-
-    const { data: rpcData, error: rpcError } = await supabase.rpc("list_admins_with_emails");
-    if (rpcError) throw rpcError;
-
-    setAdmins((rpcData ?? []) as AdminUser[]);
-  };
-
-  // Load current admins
   useEffect(() => {
-    const loadAdmins = async () => {
-      try {
-        await loadAdminsWithFallback();
-      } catch (err) {
-        console.error("Failed to load admins:", err);
-        toast({
-          title: "Error loading admins",
-          description: "Could not fetch admin list",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadAdmins();
+    try {
+      loadAdmins();
+    } catch (err) {
+      console.error("Failed to load admins:", err);
+      toast({
+        title: "Error loading admins",
+        description: "Could not fetch admin list",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   }, [toast]);
 
   const handleAddAdmin = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!email.trim()) {
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail) {
       toast({
         title: "Email required",
         description: "Please enter an email address",
@@ -91,92 +68,31 @@ export default function AdminManagement() {
       return;
     }
 
-    setAdding(true);
-    const normalizedEmail = email.trim().toLowerCase();
-    try {
-      const { data, error } = await supabase.functions.invoke("add-admin", {
-        body: {
-          email: normalizedEmail,
-          password: password.trim() || null,
-          sendInvite: password.trim() ? false : sendInvite,
-        },
+    if (!password.trim()) {
+      toast({
+        title: "Password required",
+        description: "Set a password for local admin accounts.",
+        variant: "destructive",
       });
+      return;
+    }
 
-      if (error) {
-        const functionsError = error as Error & { name?: string };
-        const isEdgeUnavailable = isEdgeFunctionTransportError(functionsError);
-
-        if (!isEdgeUnavailable) {
-          throw error;
-        }
-
-        const { data: fallbackMessage, error: fallbackError } = await supabase.rpc(
-          "promote_existing_user_to_admin",
-          {
-            target_email: normalizedEmail,
-          },
-        );
-
-        if (fallbackError) {
-          const fallbackMessage = (fallbackError as Error).message ?? "";
-          const isMissingFallbackRpc = fallbackMessage.includes(
-            "Could not find the function public.promote_existing_user_to_admin",
-          );
-
-          const isMissingExistingUser =
-            fallbackMessage.includes("No account found for this email") ||
-            fallbackMessage.includes("no account found for this email");
-
-          if (isMissingFallbackRpc) {
-            throw new Error(
-              "Fallback admin promotion is not deployed yet. Run the latest Supabase migrations, then try again.",
-            );
-          }
-
-          if (isMissingExistingUser && password.trim()) {
-            throw new Error(
-              "Could not reach Supabase Edge Functions and no existing account was found for this email. Deploy the add-admin function to create brand-new admins, or ask this user to sign up first and then add them as admin.",
-            );
-          }
-
-          throw fallbackError;
-        }
-
-        setEmail("");
-        setPassword("");
-        await loadAdminsWithFallback();
-
-        toast({
-          title: "Admin added",
-          description: password.trim()
-            ? `Edge functions were unavailable, but ${normalizedEmail} already existed and is now an admin.`
-            : fallbackMessage ?? `${normalizedEmail} is now an admin`,
-        });
-
-        return;
-      }
-
+    setAdding(true);
+    try {
+      addLocalAdminAccount(normalizedEmail, password.trim());
       setEmail("");
       setPassword("");
-      await loadAdminsWithFallback();
+      loadAdmins();
 
       toast({
         title: "Admin added",
-        description: data?.message ?? `${normalizedEmail} is now an admin`,
+        description: `${normalizedEmail} can now sign in to the admin dashboard.`,
       });
     } catch (err) {
-      const isEdgeUnavailable = isEdgeFunctionTransportError(err as Error & { name?: string });
-
-      const explicitError = (err as Error).message || "Please try again";
-      const description =
-        isEdgeUnavailable && !explicitError.includes("no existing account was found for this email")
-          ? edgeFunctionTroubleshooting
-          : explicitError;
-
       console.error("Error adding admin:", err);
       toast({
         title: "Failed to add admin",
-        description,
+        description: (err as Error).message || "Please try again",
         variant: "destructive",
       });
     } finally {
@@ -184,27 +100,36 @@ export default function AdminManagement() {
     }
   };
 
-  const handleRemoveAdmin = async (adminId: string, adminEmail: string) => {
-    if (!window.confirm(`Remove ${adminEmail} as admin? This cannot be undone.`)) return;
+  const handleRemoveAdmin = (adminEmail: string) => {
+    const configuredAdmin = getConfiguredAdmin();
 
-    try {
-      const { error } = await supabase.from("user_roles").delete().eq("id", adminId);
-
-      if (error) throw error;
-
-      setAdmins((prev) => prev.filter((a) => a.id !== adminId));
+    if (configuredAdmin?.email === adminEmail) {
       toast({
-        title: "Admin removed",
-        description: `${adminEmail} is no longer an admin`,
-      });
-    } catch (err) {
-      console.error("Error removing admin:", err);
-      toast({
-        title: "Failed to remove admin",
-        description: (err as Error).message || "Please try again",
+        title: "Cannot remove primary admin",
+        description: "The env-configured admin can only be changed through VITE_ADMIN_EMAIL.",
         variant: "destructive",
       });
+      return;
     }
+
+    if (!window.confirm(`Remove ${adminEmail} as admin? This cannot be undone.`)) return;
+
+    const removed = removeLocalAdminAccount(adminEmail);
+
+    if (!removed) {
+      toast({
+        title: "Failed to remove admin",
+        description: "Admin account not found.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    loadAdmins();
+    toast({
+      title: "Admin removed",
+      description: `${adminEmail} is no longer an admin`,
+    });
   };
 
   return (
@@ -212,7 +137,6 @@ export default function AdminManagement() {
       <Header />
       <main className="min-h-screen pt-32 pb-20 bg-muted/30">
         <div className="container max-w-4xl mx-auto px-5">
-          {/* Header */}
           <div className="flex items-center gap-4 mb-8">
             <Link to="/admin/dashboard">
               <Button variant="outline" size="icon">
@@ -221,76 +145,65 @@ export default function AdminManagement() {
             </Link>
             <div>
               <h1 className="text-3xl md:text-4xl font-semibold">Admin Management</h1>
-              <p className="text-muted-foreground">Add or remove admin users</p>
+              <p className="text-muted-foreground">Add or remove admin users (local site storage)</p>
             </div>
           </div>
 
-          {/* Add Admin Card */}
           <Card className="mb-8">
             <CardHeader>
               <CardTitle>Add New Admin</CardTitle>
               <CardDescription>
-                Enter an email address to make someone an admin. If they don't have an account, one will be created.
+                Enter an email and password to create a local admin account for this site.
               </CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleAddAdmin} className="space-y-4">
                 <div>
                   <Label htmlFor="email">Email Address</Label>
-                  <div className="flex gap-2 mt-2">
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="admin@example.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      disabled={adding}
-                    />
-                    <Button type="submit" disabled={adding}>
-                      {adding ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Adding...
-                        </>
-                      ) : (
-                        <>
-                          <Plus className="w-4 h-4 mr-2" />
-                          Add Admin
-                        </>
-                      )}
-                    </Button>
-                  </div>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="admin@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    disabled={adding}
+                    className="mt-2"
+                  />
                 </div>
                 <div>
-                  <Label htmlFor="password">Set Password (optional)</Label>
+                  <Label htmlFor="password">Password</Label>
                   <Input
                     id="password"
                     type="password"
-                    placeholder="Leave blank to send invite email"
+                    placeholder="Set a password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     disabled={adding}
+                    className="mt-2"
                   />
                   <p className="text-xs text-muted-foreground mt-2">
-                    Leave blank to send an invite email so the user can set their own password.
+                    These admin accounts are stored locally in this browser. For multi-device production access,
+                    replace this with your backend user management.
                   </p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <input
-                    id="sendInvite"
-                    type="checkbox"
-                    className="h-4 w-4"
-                    checked={sendInvite}
-                    onChange={(e) => setSendInvite(e.target.checked)}
-                    disabled={adding || Boolean(password.trim())}
-                  />
-                  <Label htmlFor="sendInvite">Send invite email</Label>
-                </div>
+
+                <Button type="submit" disabled={adding}>
+                  {adding ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Adding...
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Admin
+                    </>
+                  )}
+                </Button>
               </form>
             </CardContent>
           </Card>
 
-          {/* Current Admins Card */}
           <Card>
             <CardHeader>
               <CardTitle>Current Admins ({admins.length})</CardTitle>
@@ -307,19 +220,22 @@ export default function AdminManagement() {
                 <div className="space-y-3">
                   {admins.map((admin) => (
                     <div
-                      key={admin.id}
+                      key={admin.email}
                       className="flex items-center justify-between p-4 border border-border rounded-lg"
                     >
                       <div>
                         <p className="font-medium">{admin.email}</p>
                         <p className="text-sm text-muted-foreground">
-                          Added {new Date(admin.created_at).toLocaleDateString()}
+                          {admin.source === "env"
+                            ? "Primary admin (from environment config)"
+                            : `Added ${new Date(admin.created_at).toLocaleDateString()}`}
                         </p>
                       </div>
                       <Button
                         variant="destructive"
                         size="sm"
-                        onClick={() => handleRemoveAdmin(admin.id, admin.email)}
+                        onClick={() => handleRemoveAdmin(admin.email)}
+                        disabled={admin.source === "env"}
                       >
                         <Trash2 className="w-4 h-4 mr-2" />
                         Remove
