@@ -26,6 +26,26 @@ export default function AdminManagement() {
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
 
+  const edgeFunctionTroubleshooting =
+    "Could not reach Supabase Edge Functions. Confirm the add-admin function is deployed, your VITE_SUPABASE_URL and publishable key match the live project, and Supabase Auth SMTP settings are configured in the dashboard.";
+
+  const edgeFunctionTransportIndicators = [
+    "edge function",
+    "failed to send a request to edge function",
+    "failed to send a request to the edge function",
+    "failed to fetch",
+    "networkerror",
+  ];
+
+  const isEdgeFunctionTransportError = (err: Error & { name?: string }) => {
+    if (err.name === "FunctionsFetchError") {
+      return true;
+    }
+
+    const normalizedMessage = (err.message ?? "").toLowerCase();
+    return edgeFunctionTransportIndicators.some((indicator) => normalizedMessage.includes(indicator));
+  };
+
   const loadAdminsWithFallback = async () => {
     const { data, error } = await supabase.functions.invoke("list-admins");
     if (!error) {
@@ -84,24 +104,10 @@ export default function AdminManagement() {
 
       if (error) {
         const functionsError = error as Error & { name?: string };
-        const message = functionsError.message ?? "";
-        const normalizedMessage = message.toLowerCase();
-        const isEdgeUnavailable =
-          normalizedMessage.includes("edge function") ||
-          normalizedMessage.includes("failed to send a request to edge function") ||
-          normalizedMessage.includes("failed to send a request to the edge function") ||
-          normalizedMessage.includes("failed to fetch") ||
-          normalizedMessage.includes("networkerror") ||
-          functionsError.name === "FunctionsFetchError";
+        const isEdgeUnavailable = isEdgeFunctionTransportError(functionsError);
 
         if (!isEdgeUnavailable) {
           throw error;
-        }
-
-        if (password.trim()) {
-          throw new Error(
-            "Edge functions are currently unavailable, so password-based admin creation cannot run. Leave password blank and add an existing signed-up user instead.",
-          );
         }
 
         const { data: fallbackMessage, error: fallbackError } = await supabase.rpc(
@@ -117,9 +123,19 @@ export default function AdminManagement() {
             "Could not find the function public.promote_existing_user_to_admin",
           );
 
+          const isMissingExistingUser =
+            fallbackMessage.includes("No account found for this email") ||
+            fallbackMessage.includes("no account found for this email");
+
           if (isMissingFallbackRpc) {
             throw new Error(
               "Fallback admin promotion is not deployed yet. Run the latest Supabase migrations, then try again.",
+            );
+          }
+
+          if (isMissingExistingUser && password.trim()) {
+            throw new Error(
+              "Could not reach Supabase Edge Functions and no existing account was found for this email. Deploy the add-admin function to create brand-new admins, or ask this user to sign up first and then add them as admin.",
             );
           }
 
@@ -132,7 +148,9 @@ export default function AdminManagement() {
 
         toast({
           title: "Admin added",
-          description: fallbackMessage ?? `${normalizedEmail} is now an admin`,
+          description: password.trim()
+            ? `Edge functions were unavailable, but ${normalizedEmail} already existed and is now an admin.`
+            : fallbackMessage ?? `${normalizedEmail} is now an admin`,
         });
 
         return;
@@ -147,16 +165,13 @@ export default function AdminManagement() {
         description: data?.message ?? `${normalizedEmail} is now an admin`,
       });
     } catch (err) {
-      const message = (err as Error).message ?? "";
-      const normalizedMessage = message.toLowerCase();
-      const isEdgeUnavailable =
-        normalizedMessage.includes("edge function") ||
-        normalizedMessage.includes("failed to fetch") ||
-        normalizedMessage.includes("networkerror");
+      const isEdgeUnavailable = isEdgeFunctionTransportError(err as Error & { name?: string });
 
-      const description = isEdgeUnavailable
-        ? "Could not reach Supabase Edge Functions. If this persists, deploy latest Supabase migrations and ensure edge functions are deployed."
-        : (err as Error).message || "Please try again";
+      const explicitError = (err as Error).message || "Please try again";
+      const description =
+        isEdgeUnavailable && !explicitError.includes("no existing account was found for this email")
+          ? edgeFunctionTroubleshooting
+          : explicitError;
 
       console.error("Error adding admin:", err);
       toast({

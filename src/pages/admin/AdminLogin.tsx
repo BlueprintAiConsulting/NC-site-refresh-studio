@@ -9,6 +9,20 @@ import { Lock, Mail, Loader2 } from 'lucide-react';
 import churchLogo from '@/assets/church-logo.png';
 import { supabase } from '@/integrations/supabase/client';
 
+
+const getInviteParam = (key: string) => {
+  const queryParams = new URLSearchParams(window.location.search);
+  const queryValue = queryParams.get(key);
+  if (queryValue) return queryValue;
+
+  const hash = window.location.hash.startsWith('#')
+    ? window.location.hash.slice(1)
+    : window.location.hash;
+  if (!hash) return null;
+
+  return new URLSearchParams(hash).get(key);
+};
+
 export default function AdminLogin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -19,23 +33,12 @@ export default function AdminLogin() {
   const [inviteChecking, setInviteChecking] = useState(false);
   const { signIn } = useAuth();
   const navigate = useNavigate();
-  const inviteAccessToken = useMemo(() => {
-    const params = new URLSearchParams(window.location.search);
-    return params.get('access_token');
-  }, []);
-  const inviteRefreshToken = useMemo(() => {
-    const params = new URLSearchParams(window.location.search);
-    return params.get('refresh_token');
-  }, []);
-  const inviteTokenHash = useMemo(() => {
-    const params = new URLSearchParams(window.location.search);
-    return params.get('token_hash');
-  }, []);
-  const inviteType = useMemo(() => {
-    const params = new URLSearchParams(window.location.search);
-    return params.get('type');
-  }, []);
-  const hasInviteToken = Boolean(inviteTokenHash || inviteAccessToken);
+  const inviteAccessToken = useMemo(() => getInviteParam('access_token'), []);
+  const inviteRefreshToken = useMemo(() => getInviteParam('refresh_token'), []);
+  const inviteTokenHash = useMemo(() => getInviteParam('token_hash'), []);
+  const inviteCode = useMemo(() => getInviteParam('code'), []);
+  const inviteType = useMemo(() => getInviteParam('type'), []);
+  const hasInviteToken = Boolean(inviteTokenHash || inviteAccessToken || inviteCode);
 
   useEffect(() => {
     if (inviteAccessToken && inviteRefreshToken) {
@@ -52,6 +55,28 @@ export default function AdminLogin() {
         })
         .catch((error) => {
           console.error('Invite session error:', error);
+          setInviteError('This invite link is no longer valid. Request a new invite.');
+        })
+        .finally(() => {
+          setInviteChecking(false);
+        });
+      return;
+    }
+
+    if (inviteCode) {
+      setInviteChecking(true);
+      supabase.auth
+        .exchangeCodeForSession(inviteCode)
+        .then(({ error }) => {
+          if (error) {
+            console.error('Invite code exchange error:', error);
+            setInviteError('This invite link is no longer valid. Request a new invite.');
+            return;
+          }
+          setInviteVerified(true);
+        })
+        .catch((error) => {
+          console.error('Invite code exchange error:', error);
           setInviteError('This invite link is no longer valid. Request a new invite.');
         })
         .finally(() => {
@@ -80,7 +105,7 @@ export default function AdminLogin() {
           setInviteChecking(false);
         });
     }
-  }, [inviteAccessToken, inviteRefreshToken, inviteTokenHash, inviteType]);
+  }, [inviteAccessToken, inviteCode, inviteRefreshToken, inviteTokenHash, inviteType]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -133,7 +158,7 @@ export default function AdminLogin() {
                     ? inviteError
                     : inviteChecking
                       ? 'Checking invite link...'
-                      : inviteVerified || inviteAccessToken
+                      : inviteVerified || inviteAccessToken || inviteCode
                       ? 'Invite verified. Set a password to finish creating your admin account.'
                       : 'Use your invite link to verify access before setting a password.'}
                 </div>
