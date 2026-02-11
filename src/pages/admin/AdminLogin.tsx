@@ -9,6 +9,20 @@ import { Lock, Mail, Loader2 } from 'lucide-react';
 import churchLogo from '@/assets/church-logo.png';
 import { supabase } from '@/integrations/supabase/client';
 
+
+const getInviteParam = (key: string) => {
+  const queryParams = new URLSearchParams(window.location.search);
+  const queryValue = queryParams.get(key);
+  if (queryValue) return queryValue;
+
+  const hash = window.location.hash.startsWith('#')
+    ? window.location.hash.slice(1)
+    : window.location.hash;
+  if (!hash) return null;
+
+  return new URLSearchParams(hash).get(key);
+};
+
 export default function AdminLogin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -19,22 +33,10 @@ export default function AdminLogin() {
   const [inviteChecking, setInviteChecking] = useState(false);
   const { signIn } = useAuth();
   const navigate = useNavigate();
-  const inviteAccessToken = useMemo(() => {
-    const params = new URLSearchParams(window.location.search);
-    return params.get('access_token');
-  }, []);
-  const inviteRefreshToken = useMemo(() => {
-    const params = new URLSearchParams(window.location.search);
-    return params.get('refresh_token');
-  }, []);
-  const inviteTokenHash = useMemo(() => {
-    const params = new URLSearchParams(window.location.search);
-    return params.get('token_hash');
-  }, []);
-  const inviteType = useMemo(() => {
-    const params = new URLSearchParams(window.location.search);
-    return params.get('type');
-  }, []);
+  const inviteAccessToken = useMemo(() => getInviteParam('access_token'), []);
+  const inviteRefreshToken = useMemo(() => getInviteParam('refresh_token'), []);
+  const inviteTokenHash = useMemo(() => getInviteParam('token_hash'), []);
+  const inviteType = useMemo(() => getInviteParam('type'), []);
   const hasInviteToken = Boolean(inviteTokenHash || inviteAccessToken);
 
   useEffect(() => {

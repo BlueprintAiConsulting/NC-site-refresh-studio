@@ -197,6 +197,47 @@ describe("AdminManagement", () => {
     });
   });
 
+
+  it("falls back to rpc for FunctionsFetchError responses", async () => {
+    mocks.invokeMock.mockImplementation((functionName: string) => {
+      if (functionName === "list-admins") {
+        return Promise.resolve({ data: { admins: [] }, error: null });
+      }
+
+      if (functionName === "add-admin") {
+        const error = new Error("Unexpected transport issue") as Error & { name?: string };
+        error.name = "FunctionsFetchError";
+        return Promise.resolve({ data: null, error });
+      }
+
+      return Promise.resolve({ data: null, error: null });
+    });
+
+    mocks.rpcMock.mockResolvedValue({
+      data: "newadmin@example.com is now an admin.",
+      error: null,
+    });
+
+    const { default: AdminManagement } = await import("./AdminManagement");
+
+    render(
+      <MemoryRouter>
+        <AdminManagement />
+      </MemoryRouter>
+    );
+
+    fireEvent.change(screen.getByLabelText(/email address/i), {
+      target: { value: "newadmin@example.com" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /add admin/i }));
+
+    await waitFor(() => {
+      expect(mocks.rpcMock).toHaveBeenCalledWith("promote_existing_user_to_admin", {
+        target_email: "newadmin@example.com",
+      });
+    });
+  });
+
   it("falls back to rpc for lowercase edge-function transport errors", async () => {
     mocks.invokeMock.mockImplementation((functionName: string) => {
       if (functionName === "list-admins") {
@@ -238,7 +279,7 @@ describe("AdminManagement", () => {
     });
   });
 
-  it("shows edge-function troubleshooting guidance when direct admin creation cannot reach Supabase", async () => {
+  it("falls back to existing-user promotion when direct admin creation cannot reach Supabase", async () => {
     mocks.invokeMock.mockImplementation((functionName: string) => {
       if (functionName === "list-admins") {
         return Promise.resolve({ data: { admins: [] }, error: null });
@@ -252,6 +293,11 @@ describe("AdminManagement", () => {
       }
 
       return Promise.resolve({ data: null, error: null });
+    });
+
+    mocks.rpcMock.mockResolvedValue({
+      data: "newadmin@example.com is now an admin.",
+      error: null,
     });
 
     const { default: AdminManagement } = await import("./AdminManagement");
@@ -273,9 +319,59 @@ describe("AdminManagement", () => {
     await waitFor(() => {
       expect(mocks.toastMock).toHaveBeenCalledWith(
         expect.objectContaining({
+          title: "Admin added",
+          description:
+            "Edge functions were unavailable, but newadmin@example.com already existed and is now an admin.",
+        }),
+      );
+    });
+  });
+
+  it("shows clear guidance when edge functions are down and the target email has no account yet", async () => {
+    mocks.invokeMock.mockImplementation((functionName: string) => {
+      if (functionName === "list-admins") {
+        return Promise.resolve({ data: { admins: [] }, error: null });
+      }
+
+      if (functionName === "add-admin") {
+        return Promise.resolve({
+          data: null,
+          error: new Error("Failed to fetch"),
+        });
+      }
+
+      return Promise.resolve({ data: null, error: null });
+    });
+
+    mocks.rpcMock.mockResolvedValue({
+      data: null,
+      error: new Error(
+        "No account found for this email. Ask them to sign up first, then add them as admin.",
+      ),
+    });
+
+    const { default: AdminManagement } = await import("./AdminManagement");
+
+    render(
+      <MemoryRouter>
+        <AdminManagement />
+      </MemoryRouter>
+    );
+
+    fireEvent.change(screen.getByLabelText(/email address/i), {
+      target: { value: "newperson@example.com" },
+    });
+    fireEvent.change(screen.getByLabelText(/set password \(optional\)/i), {
+      target: { value: "StrongPassword123!" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /add admin/i }));
+
+    await waitFor(() => {
+      expect(mocks.toastMock).toHaveBeenCalledWith(
+        expect.objectContaining({
           title: "Failed to add admin",
           description:
-            "Could not reach Supabase Edge Functions. Confirm the add-admin function is deployed, your VITE_SUPABASE_URL and publishable key match the live project, and Supabase Auth SMTP settings are configured in the dashboard.",
+            "Could not reach Supabase Edge Functions and no existing account was found for this email. Deploy the add-admin function to create brand-new admins, or ask this user to sign up first and then add them as admin.",
         }),
       );
     });
