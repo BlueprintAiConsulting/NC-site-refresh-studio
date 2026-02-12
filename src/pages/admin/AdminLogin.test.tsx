@@ -10,6 +10,10 @@ vi.mock("@/contexts/useAuth", () => ({
   useAuth: () => ({ signIn: mocks.signInMock }),
 }));
 
+vi.mock("@/lib/admin-auth", () => ({
+  isAdminLoginConfigured: () => true,
+}));
+
 vi.mock("react-router-dom", async () => {
   const actual = await vi.importActual<typeof import("react-router-dom")>("react-router-dom");
   return {
