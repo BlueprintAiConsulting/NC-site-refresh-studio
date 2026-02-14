@@ -2,28 +2,11 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const toastMock = vi.fn();
-const getSessionMock = vi.fn();
-const onAuthStateChangeMock = vi.fn();
-const signInWithPasswordMock = vi.fn();
-const signOutMock = vi.fn();
-const rpcMock = vi.fn();
 
 vi.mock('@/hooks/use-toast', () => ({
   useToast: () => ({
     toast: toastMock,
   }),
-}));
-
-vi.mock('@/integrations/supabase/client', () => ({
-  supabase: {
-    auth: {
-      getSession: getSessionMock,
-      onAuthStateChange: onAuthStateChangeMock,
-      signInWithPassword: signInWithPasswordMock,
-      signOut: signOutMock,
-    },
-    rpc: rpcMock,
-  },
 }));
 
 async function renderHarness() {
@@ -38,7 +21,7 @@ async function renderHarness() {
         <div data-testid="loading">{String(loading)}</div>
         <div data-testid="email">{user?.email ?? 'none'}</div>
         <div data-testid="is-admin">{String(isAdmin)}</div>
-        <button type="button" onClick={() => signIn('admin@example.com', 'StrongPassword123!').catch(() => undefined)}>
+        <button type="button" onClick={() => signIn('admin@example.com', 'StrongPassword123!')}>
           Sign In
         </button>
         <button type="button" onClick={() => signOut()}>
@@ -55,30 +38,16 @@ async function renderHarness() {
   );
 }
 
-describe('AuthProvider supabase admin flow', () => {
+describe('AuthProvider local admin flow', () => {
   beforeEach(() => {
     vi.resetModules();
+    vi.stubEnv('VITE_ADMIN_EMAIL', 'admin@example.com');
+    vi.stubEnv('VITE_ADMIN_PASSWORD', 'StrongPassword123!');
+    window.localStorage.clear();
     toastMock.mockReset();
-    getSessionMock.mockReset();
-    onAuthStateChangeMock.mockReset();
-    signInWithPasswordMock.mockReset();
-    signOutMock.mockReset();
-    rpcMock.mockReset();
-
-    getSessionMock.mockResolvedValue({ data: { session: null }, error: null });
-    onAuthStateChangeMock.mockReturnValue({
-      data: { subscription: { unsubscribe: vi.fn() } },
-    });
-    signOutMock.mockResolvedValue({ error: null });
-    rpcMock.mockResolvedValue({ data: true, error: null });
   });
 
-  it('signs in and marks admin when role check passes', async () => {
-    signInWithPasswordMock.mockResolvedValue({
-      data: { user: { id: 'u1', email: 'admin@example.com' } },
-      error: null,
-    });
-
+  it('signs in and persists local admin session', async () => {
     await renderHarness();
 
     await waitFor(() => {
@@ -91,31 +60,67 @@ describe('AuthProvider supabase admin flow', () => {
       expect(screen.getByTestId('email')).toHaveTextContent('admin@example.com');
       expect(screen.getByTestId('is-admin')).toHaveTextContent('true');
     });
+
+    expect(window.localStorage.getItem('admin-auth-session')).toContain('admin@example.com');
   });
 
-  it('rejects sign-in for non-admin accounts', async () => {
-    signInWithPasswordMock.mockResolvedValue({
-      data: { user: { id: 'u2', email: 'user@example.com' } },
-      error: null,
-    });
-    rpcMock.mockResolvedValue({ data: false, error: null });
+  it('restores session from localStorage on load', async () => {
+    window.localStorage.setItem(
+      'admin-auth-session',
+      JSON.stringify({ email: 'admin@example.com', loggedInAt: new Date().toISOString() }),
+    );
 
     await renderHarness();
 
-    fireEvent.click(screen.getByRole('button', { name: /sign in/i }));
-
     await waitFor(() => {
-      expect(signOutMock).toHaveBeenCalled();
-      expect(screen.getByTestId('email')).toHaveTextContent('none');
-      expect(screen.getByTestId('is-admin')).toHaveTextContent('false');
+      expect(screen.getByTestId('email')).toHaveTextContent('admin@example.com');
+      expect(screen.getByTestId('is-admin')).toHaveTextContent('true');
     });
   });
 
-  it('signs out and clears auth state', async () => {
-    getSessionMock.mockResolvedValue({
-      data: { session: { user: { id: 'u1', email: 'admin@example.com' } } },
-      error: null,
+
+
+  it('allows sign-in for locally added admin accounts', async () => {
+    window.localStorage.setItem(
+      'admin-auth-accounts',
+      JSON.stringify([
+        { email: 'editor@example.com', password: 'LocalPass123!', createdAt: new Date().toISOString(), source: 'local' },
+      ]),
+    );
+
+    const { AuthProvider } = await import('./AuthContext');
+    const { useAuth } = await import('./useAuth');
+
+    function LocalSignInHarness() {
+      const { user, signIn } = useAuth();
+      return (
+        <div>
+          <div data-testid="local-email">{user?.email ?? 'none'}</div>
+          <button type="button" onClick={() => signIn('editor@example.com', 'LocalPass123!')}>
+            Local Sign In
+          </button>
+        </div>
+      );
+    }
+
+    render(
+      <AuthProvider>
+        <LocalSignInHarness />
+      </AuthProvider>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /local sign in/i }));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('local-email')).toHaveTextContent('editor@example.com');
     });
+  });
+
+  it('signs out and clears persisted session', async () => {
+    window.localStorage.setItem(
+      'admin-auth-session',
+      JSON.stringify({ email: 'admin@example.com', loggedInAt: new Date().toISOString() }),
+    );
 
     await renderHarness();
 
@@ -129,5 +134,7 @@ describe('AuthProvider supabase admin flow', () => {
       expect(screen.getByTestId('email')).toHaveTextContent('none');
       expect(screen.getByTestId('is-admin')).toHaveTextContent('false');
     });
+
+    expect(window.localStorage.getItem('admin-auth-session')).toBeNull();
   });
 });
