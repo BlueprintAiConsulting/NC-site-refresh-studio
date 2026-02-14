@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Lock, Mail, Loader2 } from 'lucide-react';
 import churchLogo from '@/assets/church-logo.png';
+import { isAdminLoginConfigured } from '@/lib/admin-auth';
 
 export default function AdminLogin() {
   const [email, setEmail] = useState('');
@@ -14,6 +15,7 @@ export default function AdminLogin() {
   const [loading, setLoading] = useState(false);
   const { signIn } = useAuth();
   const navigate = useNavigate();
+  const loginConfigured = isAdminLoginConfigured();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,13 +43,16 @@ export default function AdminLogin() {
         <Card>
           <CardHeader>
             <CardTitle>Sign In</CardTitle>
-            <CardDescription>
-              Sign in with your admin account. Credentials are verified through the site backend for
-              multi-device access.
-            </CardDescription>
+            <CardDescription>Enter your credentials to access the admin dashboard</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
+              {!loginConfigured ? (
+                <div className="rounded-md border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+                  Admin login is not configured. Set <code>VITE_ADMIN_EMAIL</code> and{' '}
+                  <code>VITE_ADMIN_PASSWORD</code> in your environment and restart the app.
+                </div>
+              ) : null}
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <div className="relative">
@@ -80,7 +85,7 @@ export default function AdminLogin() {
                 </div>
               </div>
 
-              <Button type="submit" className="w-full" disabled={loading}>
+              <Button type="submit" className="w-full" disabled={loading || !loginConfigured}>
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
