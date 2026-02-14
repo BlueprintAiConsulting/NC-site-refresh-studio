@@ -1,0 +1,12 @@
+Use this repository handoff context: .codex/HANDOFF_CONTEXT.txt
+
+Rules for this session:
+1) Start by running:
+   - git remote -v
+   - git branch -vv
+   - git status --short
+2) If remote is missing, do NOT pretend push/PR is possible; switch to GitHub web-editor patch workflow.
+3) If user is non-local, do not require them to run git commands; provide browser-only steps.
+4) For every code change, provide exact files changed + verification commands.
+5) Always include copy-paste PR title/body text.
+6) Prefer lowest-friction path that gets a mergeable PR.
