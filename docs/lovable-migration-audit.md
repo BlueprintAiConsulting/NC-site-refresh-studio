@@ -4,6 +4,11 @@ This audit summarizes what is already Lovable-friendly, what still depends on Su
 
 ## Current status
 
+
+## Current operating mode note
+
+As of the latest update, image/content modules are running with the real Supabase runtime client restored (to keep existing gallery/image data loading), while admin auth remains local-browser based.
+
 ### Already Lovable-friendly
 - Admin login/auth now runs in-site (no Supabase auth dependency).
 - Admin management uses local account management in-site.
